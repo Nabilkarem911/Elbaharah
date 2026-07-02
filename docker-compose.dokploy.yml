@@ -24,6 +24,7 @@ services:
       - "3000"
     networks:
       - elbharah_net
+      - dokploy-network
 
   frontend:
     build: ./frontend
@@ -39,3 +40,5 @@ services:
 networks:
   elbharah_net:
     driver: bridge
+  dokploy-network:
+    external: true
