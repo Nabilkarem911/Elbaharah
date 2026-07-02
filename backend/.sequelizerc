@@ -1,20 +1,8 @@
-{
-  "development": {
-    "username": "elbharah",
-    "password": "elbharah_dev_2026",
-    "database": "elbharah",
-    "host": "127.0.0.1",
-    "port": 5432,
-    "dialect": "postgres",
-    "logging": false
-  },
-  "production": {
-    "username": "elbharah",
-    "password": "elbharah_prod_2026",
-    "database": "elbharah",
-    "host": "postgres",
-    "port": 5432,
-    "dialect": "postgres",
-    "logging": false
-  }
-}
+const path = require('path');
+
+module.exports = {
+  config: path.resolve('config', 'config.json'),
+  'models-path': path.resolve('src', 'models'),
+  'seeders-path': path.resolve('src', 'seeders'),
+  'migrations-path': path.resolve('src', 'migrations'),
+};
