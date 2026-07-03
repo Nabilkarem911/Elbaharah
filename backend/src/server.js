@@ -6,7 +6,7 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const path = require('path');
 
-const { sequelize } = require('./models');
+const { sequelize, User } = require('./models');
 const errorHandler = require('./middleware/error.middleware');
 
 const authRoutes = require('./routes/auth.routes');
@@ -72,6 +72,29 @@ const start = async () => {
     console.log('✅ Database connected');
     await sequelize.sync({ alter: true });
     console.log('✅ Models synced');
+
+    const userCount = await User.count();
+    if (userCount === 0) {
+      console.log('🌱 No users found, running seeders...');
+      const seeders = [
+        require('./seeders/01-admin.seeder'),
+        require('./seeders/02-suppliers.seeder'),
+        require('./seeders/03-fishTypes.seeder'),
+        require('./seeders/04-expenseCategories.seeder'),
+        require('./seeders/05-system.seeder'),
+      ];
+      for (const seeder of seeders) {
+        await seeder.up();
+      }
+      console.log('✅ Seeders completed');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('Login: admin / admin123');
+      console.log('Login: manager / manager123');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    } else {
+      console.log('✅ Users already exist, skipping seeders');
+    }
+
     app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
     });
