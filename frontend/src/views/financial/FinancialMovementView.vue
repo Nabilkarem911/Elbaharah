@@ -7,7 +7,7 @@
         <p class="text-sm text-gray-500 mt-1">تسجيل وعرض المبيعات اليومية بكل قنوات البيع</p>
       </div>
       <div class="flex items-center gap-3">
-        <ExportButton @export="handleExport" />
+        <ExportButton :data="sales" :columns="columns" filename="الحركة_المالية" title="الحركة المالية" />
         <button @click="openModal()" class="btn-gold">
           <Plus class="w-4 h-4" />
           <span>سجل يومي جديد</span>
@@ -279,10 +279,6 @@ const confirmDelete = async (row) => {
   } catch (err) {
     toast('فشل الحذف', 'error');
   }
-};
-
-const handleExport = (type) => {
-  toast(`تصدير ${type.toUpperCase()} — قيد التطوير`, 'info');
 };
 
 onMounted(() => {
