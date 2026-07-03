@@ -92,6 +92,10 @@
           <input type="number" step="0.01" v-model="form.mastercard" class="input tabular-nums" />
         </div>
         <div>
+          <label class="label">تحويل بنكي</label>
+          <input type="number" step="0.01" v-model="form.bank_transfer" class="input tabular-nums" />
+        </div>
+        <div>
           <label class="label">مبيعات التوصيل</label>
           <input type="number" step="0.01" v-model="form.delivery_sales" class="input tabular-nums" />
         </div>
@@ -163,6 +167,7 @@ const columns = computed(() => {
     { key: 'mada', label: 'مدى', type: 'currency' },
     { key: 'visa', label: 'فيزا', type: 'currency' },
     { key: 'mastercard', label: 'ماستر', type: 'currency' },
+    { key: 'bank_transfer', label: 'تحويل بنكي', type: 'currency' },
     { key: 'net_sales', label: 'الصافي', type: 'currency', sortable: true },
     { key: 'surplus_deficit', label: 'فائض/عجز', type: 'currency', sortable: true },
     { key: 'network_sales', label: 'الشبكة', type: 'currency' },
@@ -188,7 +193,7 @@ const emptyForm = () => {
   const f = {
     sale_date: new Date().toISOString().split('T')[0],
     total_sales: 0, other_sales: 0, credit_sales: 0,
-    cash_box: 0, mada: 0, visa: 0, mastercard: 0,
+    cash_box: 0, mada: 0, visa: 0, mastercard: 0, bank_transfer: 0,
     delivery_sales: 0, delivery_orders_count: 0, notes: '',
   };
   for (const p of deliveryPlatforms.value) {
@@ -199,13 +204,13 @@ const emptyForm = () => {
 
 const netSales = computed(() => {
   let total = Number(form.cash_box || 0) + Number(form.mada || 0) +
-    Number(form.visa || 0) + Number(form.mastercard || 0);
+    Number(form.visa || 0) + Number(form.mastercard || 0) + Number(form.bank_transfer || 0);
   for (const p of deliveryPlatforms.value) {
     total += Number(form[p.key] || 0);
   }
   return total;
 });
-const networkSales = computed(() => Number(form.mada || 0) + Number(form.visa || 0) + Number(form.mastercard || 0));
+const networkSales = computed(() => Number(form.mada || 0) + Number(form.visa || 0) + Number(form.mastercard || 0) + Number(form.bank_transfer || 0));
 const surplusDeficit = computed(() => netSales.value - Number(form.total_sales || 0));
 
 const loadData = async () => {

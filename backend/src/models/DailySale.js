@@ -60,6 +60,10 @@ const DailySale = sequelize.define('DailySale', {
     type: DataTypes.DECIMAL(12, 2),
     defaultValue: 0,
   },
+  bank_transfer: {
+    type: DataTypes.DECIMAL(12, 2),
+    defaultValue: 0,
+  },
   net_sales: {
     type: DataTypes.DECIMAL(12, 2),
     defaultValue: 0,
@@ -105,12 +109,14 @@ const DailySale = sequelize.define('DailySale', {
         parseFloat(sale.toyo || 0) +
         parseFloat(sale.mada || 0) +
         parseFloat(sale.visa || 0) +
-        parseFloat(sale.mastercard || 0);
+        parseFloat(sale.mastercard || 0) +
+        parseFloat(sale.bank_transfer || 0);
       sale.surplus_deficit = parseFloat(sale.net_sales) - parseFloat(sale.total_sales || 0);
       sale.network_sales =
         parseFloat(sale.mada || 0) +
         parseFloat(sale.visa || 0) +
-        parseFloat(sale.mastercard || 0);
+        parseFloat(sale.mastercard || 0) +
+        parseFloat(sale.bank_transfer || 0);
       if (!sale.day_name && sale.sale_date) {
         const days = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
         const d = new Date(sale.sale_date);
