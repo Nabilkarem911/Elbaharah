@@ -1,5 +1,5 @@
 const { DailySale, Purchase, Expense, DeliveryOrder, Supplier, PurchaseItem, FishType,
-  CreditSale, CreditAccount, FishInventory, Setting } = require('../models');
+  CreditSale, CreditAccount, FishInventory, Setting, CancelledInvoice, OtherSale } = require('../models');
 const { Op } = require('sequelize');
 
 exports.today = async (req, res, next) => {
@@ -235,6 +235,132 @@ exports.notifications = async (req, res, next) => {
     }
 
     res.json({ alerts });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.dailyReport = async (req, res, next) => {
+  try {
+    const now = new Date();
+    const todayStr = now.toISOString().split('T')[0];
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+
+    // Helper: aggregate a daily sale row
+    const emptySale = {
+      total_sales: 0, app_elbharah: 0, hunger_station: 0, keta: 0, toyo: 0,
+      other_sales: 0, credit_sales: 0, cash_box: 0, network_sales: 0,
+      net_sales: 0, surplus_deficit: 0, mada: 0, visa: 0, mastercard: 0, bank_transfer: 0,
+    };
+
+    const todaySale = await DailySale.findOne({ where: { sale_date: todayStr } });
+    const yesterdaySale = await DailySale.findOne({ where: { sale_date: yesterdayStr } });
+    const monthSales = await DailySale.findAll({ where: { sale_date: { [Op.between]: [monthStart, monthEnd] } } });
+
+    const sumSales = (sales) => {
+      if (Array.isArray(sales)) {
+        return sales.reduce((acc, s) => {
+          Object.keys(emptySale).forEach(k => { acc[k] += parseFloat(s[k] || 0); });
+          return acc;
+        }, { ...emptySale });
+      }
+      if (!sales) return { ...emptySale };
+      const r = { ...emptySale };
+      Object.keys(emptySale).forEach(k => { r[k] = parseFloat(sales[k] || 0); });
+      return r;
+    };
+
+    const todaySales = sumSales(todaySale);
+    const yesterdaySales = sumSales(yesterdaySale);
+    const monthSalesAgg = sumSales(monthSales);
+
+    // Cancelled invoices
+    const todayCancelled = await CancelledInvoice.findAll({ where: { invoice_date: todayStr } });
+    const yesterdayCancelled = await CancelledInvoice.findAll({ where: { invoice_date: yesterdayStr } });
+    const monthCancelled = await CancelledInvoice.findAll({ where: { invoice_date: { [Op.between]: [monthStart, monthEnd] } } });
+
+    const sumCancelled = (arr) => arr.reduce((s, c) => s + parseFloat(c.invoice_amount), 0);
+    todaySales.cancelled = sumCancelled(todayCancelled);
+    yesterdaySales.cancelled = sumCancelled(yesterdayCancelled);
+    monthSalesAgg.cancelled = sumCancelled(monthCancelled);
+
+    // Other sales
+    const todayOther = await OtherSale.findAll({ where: { sale_date: todayStr } });
+    const yesterdayOther = await OtherSale.findAll({ where: { sale_date: yesterdayStr } });
+    const monthOther = await OtherSale.findAll({ where: { sale_date: { [Op.between]: [monthStart, monthEnd] } } });
+    const sumOther = (arr) => arr.reduce((s, o) => s + parseFloat(o.total), 0);
+    todaySales.other_sales_total = sumOther(todayOther);
+    yesterdaySales.other_sales_total = sumOther(yesterdayOther);
+    monthSalesAgg.other_sales_total = sumOther(monthOther);
+
+    // Fish purchases by type
+    const getFishData = async (startDate, endDate) => {
+      const purchases = await Purchase.findAll({
+        where: { purchase_date: { [Op.between]: [startDate, endDate] } },
+        include: [{ model: PurchaseItem, as: 'items', include: [{ model: FishType, as: 'fishType' }] }],
+      });
+      const fishMap = {};
+      purchases.forEach(p => {
+        p.items.forEach(item => {
+          const id = item.fish_type_id;
+          const name = item.fishType ? item.fishType.name : 'غير معروف';
+          if (!fishMap[id]) fishMap[id] = { id, name, weight: 0, total_price: 0 };
+          fishMap[id].weight += parseFloat(item.weight);
+          fishMap[id].total_price += parseFloat(item.total_price);
+        });
+      });
+      const fishList = Object.values(fishMap).map(f => ({
+        ...f,
+        price_per_kilo: f.weight > 0 ? f.total_price / f.weight : 0,
+      })).sort((a, b) => b.total_price - a.total_price);
+      return fishList;
+    };
+
+    const todayFish = await getFishData(todayStr, todayStr);
+    const yesterdayFish = await getFishData(yesterdayStr, yesterdayStr);
+    const monthFish = await getFishData(monthStart, monthEnd);
+
+    // All fish types (for column headers)
+    const allFishTypes = await FishType.findAll({ order: [['name', 'ASC']] });
+
+    // Suppliers summary
+    const getSupplierData = async (startDate, endDate) => {
+      const purchases = await Purchase.findAll({
+        where: { purchase_date: { [Op.between]: [startDate, endDate] } },
+        include: [{ model: Supplier, as: 'supplier' }],
+      });
+      const supplierMap = {};
+      purchases.forEach(p => {
+        const name = p.supplier ? p.supplier.name : 'غير معروف';
+        if (!supplierMap[name]) supplierMap[name] = { name, total: 0, count: 0 };
+        supplierMap[name].total += parseFloat(p.total_amount);
+        supplierMap[name].count += 1;
+      });
+      return Object.values(supplierMap).sort((a, b) => b.total - a.total);
+    };
+
+    const todaySuppliers = await getSupplierData(todayStr, todayStr);
+    const yesterdaySuppliers = await getSupplierData(yesterdayStr, yesterdayStr);
+    const monthSuppliers = await getSupplierData(monthStart, monthEnd);
+
+    // Purchase totals
+    const getPurchaseTotal = async (startDate, endDate) => {
+      const purchases = await Purchase.findAll({ where: { purchase_date: { [Op.between]: [startDate, endDate] } } });
+      return purchases.reduce((s, p) => s + parseFloat(p.total_amount), 0);
+    };
+
+    res.json({
+      periods: {
+        today: { date: todayStr, sales: todaySales, fish: todayFish, suppliers: todaySuppliers, purchases_total: await getPurchaseTotal(todayStr, todayStr) },
+        yesterday: { date: yesterdayStr, sales: yesterdaySales, fish: yesterdayFish, suppliers: yesterdaySuppliers, purchases_total: await getPurchaseTotal(yesterdayStr, yesterdayStr) },
+        month: { date: `${monthStart} ~ ${monthEnd}`, sales: monthSalesAgg, fish: monthFish, suppliers: monthSuppliers, purchases_total: await getPurchaseTotal(monthStart, monthEnd) },
+      },
+      fishTypes: allFishTypes.map(f => ({ id: f.id, name: f.name })),
+    });
   } catch (err) {
     next(err);
   }

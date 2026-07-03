@@ -33,6 +33,7 @@ const routes = [
       { path: 'credit-settlement', name: 'credit-settlement', component: () => import('../views/credit/CreditSettlementView.vue') },
       { path: 'cancelled-invoices', name: 'cancelled-invoices', component: () => import('../views/cancelled/CancelledInvoicesView.vue') },
       { path: 'reports', name: 'reports', component: () => import('../views/reports/ReportsHubView.vue') },
+      { path: 'daily-report', name: 'daily-report', component: () => import('../views/reports/DailyReportView.vue') },
       { path: 'reports/sales', name: 'report-sales', component: () => import('../views/reports/SalesReportView.vue') },
       { path: 'reports/fish', name: 'report-fish', component: () => import('../views/reports/FishReportView.vue') },
       { path: 'reports/delivery', name: 'report-delivery', component: () => import('../views/reports/DeliveryReportView.vue') },

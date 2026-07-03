@@ -8,5 +8,6 @@ router.get('/month', auth, ctrl.month);
 router.get('/charts', auth, ctrl.charts);
 router.get('/insights', auth, ctrl.insights);
 router.get('/notifications', auth, ctrl.notifications);
+router.get('/daily-report', auth, ctrl.dailyReport);
 
 module.exports = router;

@@ -132,6 +132,7 @@ const navItems = computed(() => {
     { path: '/credit-sales', label: 'مبيعات آجل', icon: CreditIcon },
     { path: '/credit-settlement', label: 'تسوية آجل', icon: DollarSign },
     { path: '/cancelled-invoices', label: 'الفواتير الملغية', icon: FileX },
+    { path: '/daily-report', label: 'التقرير اليومي', icon: ClipboardList },
     { path: '/reports', label: 'التقارير', icon: FileText },
   ];
   if (auth.isAdmin) {
