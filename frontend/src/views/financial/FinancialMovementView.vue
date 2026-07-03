@@ -73,7 +73,12 @@
         </div>
         <div>
           <label class="label">الصندوق</label>
-          <input type="number" step="0.01" v-model="form.cash_box" class="input tabular-nums" />
+          <div class="flex gap-2">
+            <input type="number" step="0.01" v-model="form.cash_box" class="input tabular-nums" />
+            <button type="button" @click="showCashCounter = true" class="btn-outline !px-3 flex-shrink-0" title="عداد الكاش">
+              <Calculator class="w-4 h-4" />
+            </button>
+          </div>
         </div>
         <div v-for="p in deliveryPlatforms" :key="p.id">
           <label class="label">{{ p.name }}</label>
@@ -135,16 +140,22 @@
         </button>
       </template>
     </Modal>
+
+    <!-- Cash Counter Modal -->
+    <Modal :show="showCashCounter" title="عداد الكاش" size="md" @close="showCashCounter = false">
+      <CashCounter @apply="applyCashCounter" @close="showCashCounter = false" />
+    </Modal>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, computed, inject, onMounted } from 'vue';
-import { Plus, Pencil, Trash2, Loader2 } from 'lucide-vue-next';
+import { Plus, Pencil, Trash2, Loader2, Calculator } from 'lucide-vue-next';
 import DataTable from '../../components/DataTable.vue';
 import Modal from '../../components/Modal.vue';
 import ExportButton from '../../components/ExportButton.vue';
 import DateRangePicker from '../../components/DateRangePicker.vue';
+import CashCounter from '../../components/CashCounter.vue';
 import api from '../../api';
 
 const toast = inject('toast');
@@ -185,6 +196,7 @@ const totalPages = ref(0);
 const filters = reactive({ startDate: '', endDate: '' });
 
 const showModal = ref(false);
+const showCashCounter = ref(false);
 const editing = ref(false);
 const saving = ref(false);
 const form = reactive({});
@@ -250,6 +262,12 @@ const openModal = (row = null) => {
 };
 
 const closeModal = () => { showModal.value = false; };
+
+const applyCashCounter = (total) => {
+  form.cash_box = total;
+  showCashCounter.value = false;
+  toast('تم حساب الصندوق بنجاح');
+};
 
 const save = async () => {
   saving.value = true;
