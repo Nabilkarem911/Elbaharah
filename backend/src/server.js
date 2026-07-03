@@ -31,10 +31,6 @@ app.use('/api', (req, res, next) => {
 
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
-
 app.get('/api/routes', (req, res) => {
   const routes = [];
   function walk(stack, prefix) {
@@ -66,12 +62,25 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;
 
-const start = async () => {
+let dbReady = false;
+
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', db: dbReady ? 'connected' : 'connecting', timestamp: new Date().toISOString() });
+});
+
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+  connectWithRetry();
+});
+
+async function connectWithRetry(attempt = 1) {
   try {
+    console.log(`🔄 DB connection attempt ${attempt}...`);
     await sequelize.authenticate();
     console.log('✅ Database connected');
     await sequelize.sync({ alter: true });
     console.log('✅ Models synced');
+    dbReady = true;
 
     const userCount = await User.count();
     if (userCount === 0) {
@@ -94,14 +103,10 @@ const start = async () => {
     } else {
       console.log('✅ Users already exist, skipping seeders');
     }
-
-    app.listen(PORT, () => {
-      console.log(`🚀 Server running on port ${PORT}`);
-    });
   } catch (err) {
-    console.error('❌ Failed to start:', err.message);
-    process.exit(1);
+    console.error(`❌ DB attempt ${attempt} failed: ${err.message}`);
+    const delay = Math.min(attempt * 3000, 15000);
+    console.log(`⏳ Retrying in ${delay / 1000}s...`);
+    setTimeout(() => connectWithRetry(attempt + 1), delay);
   }
-};
-
-start();
+}
