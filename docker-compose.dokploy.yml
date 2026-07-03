@@ -17,7 +17,7 @@ services:
       DB_NAME: ${DB_NAME:-elbharah}
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
-      JWT_SECRET: ${JWT_SECRET:-elbharah_jwt_secret_change_me}
+      JWT_SECRET: ${JWT_SECRET:-elbharah_jwt_secret_key_2026}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-24h}
       CORS_ORIGIN: ${CORS_ORIGIN:-*}
     expose:
