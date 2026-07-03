@@ -5,17 +5,22 @@ export default {
     extend: {
       colors: {
         primary: {
+          DEFAULT: '#071746',
+          50: '#E8EAF0',
+          100: '#C5CAD8',
+          200: '#8F98B0',
+          300: '#5A6588',
+          400: '#2A3268',
+          500: '#071746',
+          600: '#06123B',
+          700: '#050E30',
+          800: '#040A25',
+          900: '#02061A',
+        },
+        accent: {
           DEFAULT: '#1A89C8',
-          50: '#E8F4FB',
-          100: '#C5E4F3',
-          200: '#8FCCE8',
-          300: '#5AB5DC',
-          400: '#2A9DCE',
-          500: '#1A89C8',
-          600: '#1574AD',
-          700: '#071746',
-          800: '#051030',
-          900: '#030A1E',
+          light: '#3AA0DC',
+          dark: '#1574AD',
         },
         gold: {
           DEFAULT: '#D4A843',
@@ -30,9 +35,9 @@ export default {
         display: ['Cairo', 'sans-serif'],
       },
       boxShadow: {
-        card: '0 2px 8px rgba(26, 137, 200, 0.08)',
-        'card-hover': '0 4px 16px rgba(26, 137, 200, 0.15)',
-        sidebar: '4px 0 12px rgba(26, 137, 200, 0.1)',
+        card: '0 2px 8px rgba(7, 23, 70, 0.08)',
+        'card-hover': '0 4px 16px rgba(7, 23, 70, 0.15)',
+        sidebar: '4px 0 12px rgba(7, 23, 70, 0.1)',
       },
       animation: {
         'fade-in': 'fadeIn 0.3s ease-out',
