@@ -1,39 +1,26 @@
 require('dotenv').config();
 
 const { sequelize } = require('./models');
-const { User, Supplier, FishType, ExpenseCategory, PosMachine, SaleChannel, DeliveryPlatform, Setting } = require('./models');
 
 const seeders = [
   {
     name: '01-admin',
-    clean: async () => { await User.destroy({ where: { username: ['admin', 'manager'] } }); },
     run: require('./seeders/01-admin.seeder'),
   },
   {
     name: '02-suppliers',
-    clean: async () => { await Supplier.destroy({ where: {}, truncate: true, cascade: false }); },
     run: require('./seeders/02-suppliers.seeder'),
   },
   {
     name: '03-fishTypes',
-    clean: async () => { await FishType.destroy({ where: {}, truncate: true, cascade: false }); },
     run: require('./seeders/03-fishTypes.seeder'),
   },
   {
     name: '04-expenseCategories',
-    clean: async () => { await ExpenseCategory.destroy({ where: {}, truncate: true, cascade: false }); },
     run: require('./seeders/04-expenseCategories.seeder'),
   },
   {
     name: '05-system',
-    clean: async () => {
-      await Promise.all([
-        PosMachine.destroy({ where: {}, truncate: true, cascade: false }),
-        SaleChannel.destroy({ where: {}, truncate: true, cascade: false }),
-        DeliveryPlatform.destroy({ where: {}, truncate: true, cascade: false }),
-        Setting.destroy({ where: {}, truncate: true, cascade: false }),
-      ]);
-    },
     run: require('./seeders/05-system.seeder'),
   },
 ];
@@ -44,13 +31,13 @@ const runSeeds = async () => {
     await sequelize.authenticate();
     console.log('✅ Database connected');
 
-    console.log('📦 Syncing models...');
-    await sequelize.sync({ alter: true });
+    console.log('📦 Dropping all tables...');
+    await sequelize.drop();
+    console.log('📦 Recreating all tables...');
+    await sequelize.sync();
     console.log('✅ Models synced');
 
     for (const seeder of seeders) {
-      console.log(`🧹 Cleaning: ${seeder.name}...`);
-      await seeder.clean();
       console.log(`🌱 Running seeder: ${seeder.name}...`);
       await seeder.run.up();
       console.log(`✅ ${seeder.name} done`);
