@@ -46,11 +46,6 @@ const PurchaseItem = sequelize.define('PurchaseItem', {
   },
 }, {
   tableName: 'purchase_items',
-  hooks: {
-    beforeSave: (item) => {
-      item.total_price = parseFloat(item.weight) * parseFloat(item.price_per_kilo);
-    },
-  },
 });
 
 module.exports = PurchaseItem;

@@ -50,8 +50,8 @@
               <tr>
                 <th class="table-header">نوع السمك</th>
                 <th class="table-header">الوزن (كجم)</th>
+                <th class="table-header">الإجمالي (ر.س)</th>
                 <th class="table-header">سعر الكيلو</th>
-                <th class="table-header">الإجمالي</th>
                 <th class="table-header">تالف؟</th>
                 <th class="table-header">وزن التالف</th>
                 <th class="table-header"></th>
@@ -69,9 +69,9 @@
                   <input type="number" step="0.001" v-model="item.weight" class="input !py-1.5 text-sm w-24 tabular-nums" @input="calcItem(item)" />
                 </td>
                 <td class="table-cell">
-                  <input type="number" step="0.01" v-model="item.price_per_kilo" class="input !py-1.5 text-sm w-24 tabular-nums" @input="calcItem(item)" />
+                  <input type="number" step="0.01" v-model="item.total_price" class="input !py-1.5 text-sm w-24 tabular-nums" @input="calcItem(item)" />
                 </td>
-                <td class="table-cell font-bold text-primary-500 tabular-nums">{{ item.total_price.toFixed(2) }}</td>
+                <td class="table-cell font-bold text-primary-500 tabular-nums">{{ pricePerKilo(item) }}</td>
                 <td class="table-cell"><input type="checkbox" v-model="item.is_damaged" class="w-4 h-4" /></td>
                 <td class="table-cell">
                   <input type="number" step="0.001" v-model="item.damaged_weight" class="input !py-1.5 text-sm w-20 tabular-nums" :disabled="!item.is_damaged" />
@@ -147,12 +147,22 @@ const addItem = () => {
     fish_type_id: '', weight: 0, price_per_kilo: 0, total_price: 0,
     is_damaged: false, damaged_weight: 0,
   });
+  // total_price is editable, price_per_kilo is calculated
 };
 
 const removeItem = (idx) => { form.items.splice(idx, 1); };
 
 const calcItem = (item) => {
-  item.total_price = Number(item.weight || 0) * Number(item.price_per_kilo || 0);
+  item.price_per_kilo = Number(item.weight || 0) > 0
+    ? Number(item.total_price || 0) / Number(item.weight)
+    : 0;
+};
+
+const pricePerKilo = (item) => {
+  const p = Number(item.weight || 0) > 0
+    ? Number(item.total_price || 0) / Number(item.weight)
+    : 0;
+  return p.toFixed(2);
 };
 
 const totalWeight = computed(() => form.items.reduce((s, i) => s + Number(i.weight || 0), 0));
