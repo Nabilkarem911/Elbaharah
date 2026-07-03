@@ -1,6 +1,7 @@
 services:
   backend:
     build: ./backend
+    container_name: elbharah_backend
     restart: unless-stopped
     environment:
       PORT: 3000
@@ -21,6 +22,7 @@ services:
 
   frontend:
     build: ./frontend
+    container_name: elbharah_frontend
     restart: unless-stopped
     depends_on:
       - backend
