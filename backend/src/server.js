@@ -31,6 +31,12 @@ app.use('/api', (req, res, next) => {
 
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
+let dbReady = false;
+
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', db: dbReady ? 'connected' : 'connecting', timestamp: new Date().toISOString() });
+});
+
 app.get('/api/routes', (req, res) => {
   const routes = [];
   function walk(stack, prefix) {
@@ -61,12 +67,6 @@ app.use((req, res) => {
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;
-
-let dbReady = false;
-
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', db: dbReady ? 'connected' : 'connecting', timestamp: new Date().toISOString() });
-});
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
