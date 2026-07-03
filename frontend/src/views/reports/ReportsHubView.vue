@@ -37,6 +37,7 @@
 
 <script setup>
 import { reactive, inject } from 'vue';
+import { useRouter } from 'vue-router';
 import {
   Wallet, Fish, Truck, Users, Receipt, TrendingUp, CreditCard, Clock, Calculator, ChevronLeft, Calendar,
 } from 'lucide-vue-next';
@@ -44,6 +45,7 @@ import PageHeader from '../../components/PageHeader.vue';
 import DateRangePicker from '../../components/DateRangePicker.vue';
 
 const toast = inject('toast');
+const router = useRouter();
 const dateRange = reactive({ start: '', end: '' });
 
 const reportTypes = [
@@ -59,6 +61,9 @@ const reportTypes = [
 ];
 
 const generateReport = (key) => {
-  toast(`تقرير ${key} — قيد التطوير`, 'info');
+  const query = {};
+  if (dateRange.start) query.start_date = dateRange.start;
+  if (dateRange.end) query.end_date = dateRange.end;
+  router.push({ path: `/reports/${key}`, query });
 };
 </script>

@@ -12,6 +12,7 @@ const errorHandler = require('./middleware/error.middleware');
 const authRoutes = require('./routes/auth.routes');
 const dashboardRoutes = require('./routes/dashboard.routes');
 const apiRoutes = require('./routes/api.routes');
+const reportsRoutes = require('./routes/reports.routes');
 
 const app = express();
 
@@ -59,6 +60,7 @@ app.get('/api/routes', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api', apiRoutes);
+app.use('/api/reports', reportsRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ error: `Route not found: ${req.method} ${req.originalUrl}` });
