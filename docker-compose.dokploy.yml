@@ -36,6 +36,7 @@ services:
       - "80"
     networks:
       - elbharah_net
+      - dokploy-network
 
 networks:
   elbharah_net:
