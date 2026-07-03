@@ -90,7 +90,10 @@ const togglePaid = async (row) => {
   } catch { toast('فشل', 'error'); }
 };
 
-const openModal = () => { showModal.value = true; };
+const openModal = () => {
+  Object.assign(form, { credit_account_id: '', sale_date: new Date().toISOString().split('T')[0], due_date: '', amount: 0 });
+  showModal.value = true;
+};
 const closeModal = () => { showModal.value = false; };
 
 const save = async () => {

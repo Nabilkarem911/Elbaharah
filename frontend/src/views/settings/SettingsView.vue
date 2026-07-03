@@ -185,21 +185,25 @@ const chColumns = [
 ];
 
 const loadAll = async () => {
-  const [f, p, d, e, c, s] = await Promise.all([
-    api.get('/fish-types', { params: { limit: 500 } }),
-    api.get('/pos/machines', { params: { limit: 100 } }),
-    api.get('/delivery-platforms', { params: { limit: 100 } }),
-    api.get('/expense-categories', { params: { limit: 100 } }),
-    api.get('/sale-channels', { params: { limit: 100 } }),
-    api.get('/settings', { params: { limit: 1 } }),
-  ]);
-  fishTypes.value = f.data.data || f.data;
-  posMachines.value = p.data.data || p.data;
-  deliveryPlatforms.value = d.data.data || d.data;
-  expenseCategories.value = e.data.data || e.data;
-  saleChannels.value = c.data.data || c.data;
-  const sData = Array.isArray(s.data) ? s.data[0] : s.data;
-  if (sData) Object.assign(settings, sData);
+  try {
+    const [f, p, d, e, c, s] = await Promise.all([
+      api.get('/fish-types', { params: { limit: 500 } }),
+      api.get('/pos/machines', { params: { limit: 100 } }),
+      api.get('/delivery-platforms', { params: { limit: 100 } }),
+      api.get('/expense-categories', { params: { limit: 100 } }),
+      api.get('/sale-channels', { params: { limit: 100 } }),
+      api.get('/settings', { params: { limit: 1 } }),
+    ]);
+    fishTypes.value = f.data.data || f.data;
+    posMachines.value = p.data.data || p.data;
+    deliveryPlatforms.value = d.data.data || d.data;
+    expenseCategories.value = e.data.data || e.data;
+    saleChannels.value = c.data.data || c.data;
+    const sData = Array.isArray(s.data) ? s.data[0] : s.data;
+    if (sData) Object.assign(settings, sData);
+  } catch (err) {
+    toast('فشل تحميل الإعدادات', 'error');
+  }
 };
 
 const saveFish = async () => {

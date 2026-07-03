@@ -29,12 +29,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, inject, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { ArrowRight, Eye } from 'lucide-vue-next';
 import DataTable from '../../components/DataTable.vue';
 import api from '../../api';
 
+const toast = inject('toast');
 const route = useRoute();
 const supplier = ref(null);
 const purchases = ref([]);
@@ -48,9 +49,13 @@ const columns = [
 ];
 
 onMounted(async () => {
-  const { data } = await api.get(`/suppliers/${route.params.id}`);
-  supplier.value = data;
-  const { data: pData } = await api.get('/purchases', { params: { supplier_id: route.params.id, limit: 500 } });
-  purchases.value = pData.data || pData;
+  try {
+    const { data } = await api.get(`/suppliers/${route.params.id}`);
+    supplier.value = data;
+    const { data: pData } = await api.get('/purchases', { params: { supplier_id: route.params.id, limit: 500 } });
+    purchases.value = pData.data || pData;
+  } catch (err) {
+    toast('فشل تحميل البيانات', 'error');
+  }
 });
 </script>

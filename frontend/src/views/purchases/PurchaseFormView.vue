@@ -180,12 +180,16 @@ const save = async () => {
 };
 
 onMounted(async () => {
-  const [s, f] = await Promise.all([
-    api.get('/suppliers', { params: { limit: 500 } }),
-    api.get('/fish-types', { params: { limit: 500 } }),
-  ]);
-  suppliers.value = s.data.data || s.data;
-  fishTypes.value = f.data.data || f.data;
-  addItem();
+  try {
+    const [s, f] = await Promise.all([
+      api.get('/suppliers', { params: { limit: 500 } }),
+      api.get('/fish-types', { params: { limit: 500 } }),
+    ]);
+    suppliers.value = s.data.data || s.data;
+    fishTypes.value = f.data.data || f.data;
+    addItem();
+  } catch (err) {
+    toast('فشل تحميل البيانات', 'error');
+  }
 });
 </script>

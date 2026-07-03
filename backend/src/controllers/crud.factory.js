@@ -5,8 +5,19 @@ function createCrudController(Model, modelName, includeAssoc = []) {
         const { page = 1, limit = 50, ...filters } = req.query;
         const offset = (page - 1) * limit;
         const where = {};
+        const { Op } = require('sequelize');
         for (const [key, val] of Object.entries(filters)) {
-          if (val && key !== 'page' && key !== 'limit') {
+          if (!val && val !== 0) continue;
+          if (key === 'page' || key === 'limit') continue;
+          if (key.endsWith('_gte')) {
+            where[key.slice(0, -4)] = { ...where[key.slice(0, -4)], [Op.gte]: val };
+          } else if (key.endsWith('_lte')) {
+            where[key.slice(0, -4)] = { ...where[key.slice(0, -4)], [Op.lte]: val };
+          } else if (key.endsWith('_gt')) {
+            where[key.slice(0, -3)] = { ...where[key.slice(0, -3)], [Op.gt]: val };
+          } else if (key.endsWith('_lt')) {
+            where[key.slice(0, -3)] = { ...where[key.slice(0, -3)], [Op.lt]: val };
+          } else {
             where[key] = val;
           }
         }

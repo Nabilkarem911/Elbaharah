@@ -25,12 +25,13 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, inject, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { ArrowRight } from 'lucide-vue-next';
 import DataTable from '../../components/DataTable.vue';
 import api from '../../api';
 
+const toast = inject('toast');
 const route = useRoute();
 const purchase = ref(null);
 
@@ -46,7 +47,11 @@ const paymentLabels = { cash: 'نقدي', credit: 'آجل', transfer: 'تحوي�
 const paymentLabel = computed(() => paymentLabels[purchase.value?.payment_method] || '');
 
 onMounted(async () => {
-  const { data } = await api.get(`/purchases/${route.params.id}`);
-  purchase.value = data;
+  try {
+    const { data } = await api.get(`/purchases/${route.params.id}`);
+    purchase.value = data;
+  } catch (err) {
+    toast('فشل تحميل الفاتورة', 'error');
+  }
 });
 </script>

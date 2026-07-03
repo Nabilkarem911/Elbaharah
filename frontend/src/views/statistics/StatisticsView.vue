@@ -18,10 +18,12 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, inject, onMounted } from 'vue';
 import PageHeader from '../../components/PageHeader.vue';
 import DataTable from '../../components/DataTable.vue';
 import api from '../../api';
+
+const toast = inject('toast');
 
 const columns = [
   { key: 'supplier', label: 'الدلال' },
@@ -67,19 +69,23 @@ const stats = computed(() => {
 });
 
 onMounted(async () => {
-  const [p, s, f] = await Promise.all([
-    api.get('/purchases', { params: { limit: 500 } }),
-    api.get('/suppliers', { params: { limit: 500 } }),
-    api.get('/fish-types', { params: { limit: 500 } }),
-  ]);
-  const purchases = p.data.data || p.data;
-  items.value = purchases.flatMap(p =>
-    (p.items || []).map(i => ({
-      ...i, purchase_date: p.purchase_date, supplier_id: p.supplier_id,
-      supplier: p.supplier?.name, fishType: i.fishType?.name,
-    }))
-  );
-  suppliers.value = s.data.data || s.data;
-  fishTypes.value = f.data.data || f.data;
+  try {
+    const [p, s, f] = await Promise.all([
+      api.get('/purchases', { params: { limit: 500 } }),
+      api.get('/suppliers', { params: { limit: 500 } }),
+      api.get('/fish-types', { params: { limit: 500 } }),
+    ]);
+    const purchases = p.data.data || p.data;
+    items.value = purchases.flatMap(p =>
+      (p.items || []).map(i => ({
+        ...i, purchase_date: p.purchase_date, supplier_id: p.supplier_id,
+        supplier: p.supplier?.name, fishType: i.fishType?.name,
+      }))
+    );
+    suppliers.value = s.data.data || s.data;
+    fishTypes.value = f.data.data || f.data;
+  } catch (err) {
+    toast('فشل تحميل البيانات', 'error');
+  }
 });
 </script>

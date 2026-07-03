@@ -29,11 +29,13 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, inject, onMounted } from 'vue';
 import { Plus, Eye } from 'lucide-vue-next';
 import PageHeader from '../../components/PageHeader.vue';
 import DataTable from '../../components/DataTable.vue';
 import api from '../../api';
+
+const toast = inject('toast');
 
 const columns = [
   { key: 'invoice_number', label: 'رقم الفاتورة', sortable: true },
@@ -53,11 +55,15 @@ const filteredPurchases = computed(() =>
 );
 
 onMounted(async () => {
-  const [p, s] = await Promise.all([
-    api.get('/purchases', { params: { limit: 500 } }),
-    api.get('/suppliers', { params: { limit: 500 } }),
-  ]);
-  purchases.value = p.data.data || p.data;
-  suppliers.value = s.data.data || s.data;
+  try {
+    const [p, s] = await Promise.all([
+      api.get('/purchases', { params: { limit: 500 } }),
+      api.get('/suppliers', { params: { limit: 500 } }),
+    ]);
+    purchases.value = p.data.data || p.data;
+    suppliers.value = s.data.data || s.data;
+  } catch (err) {
+    toast('فشل تحميل البيانات', 'error');
+  }
 });
 </script>
