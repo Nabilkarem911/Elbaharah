@@ -5,7 +5,7 @@ const role = require('../middleware/role.middleware');
 const createCrud = require('../controllers/crud.factory');
 const { Supplier, Purchase, PurchaseItem, FishType, DailySale, PosMachine, PosTransaction,
   ExpenseCategory, Expense, OtherSale, CreditAccount, CreditSale, DeliveryPlatform,
-  SaleChannel, CancelledInvoice, FishInventory, User, Setting, DeliveryOrder } = require('../models');
+  SaleChannel, CancelledInvoice, FishInventory, User, Setting, DeliveryOrder, FishWaste } = require('../models');
 
 // Suppliers
 const supplierCtrl = createCrud(Supplier, 'الدلال');
@@ -173,5 +173,13 @@ router.put('/settings', auth, role('admin'), async (req, res, next) => {
     res.json(setting);
   } catch (err) { next(err); }
 });
+
+// Fish Waste
+const fishWasteCtrl = createCrud(FishWaste, 'هدر السمك', [{ model: FishType, as: 'fishType' }]);
+router.get('/fish-waste', auth, fishWasteCtrl.list);
+router.get('/fish-waste/:id', auth, fishWasteCtrl.getById);
+router.post('/fish-waste', auth, role('admin', 'manager'), fishWasteCtrl.create);
+router.put('/fish-waste/:id', auth, role('admin', 'manager'), fishWasteCtrl.update);
+router.delete('/fish-waste/:id', auth, role('admin', 'manager'), fishWasteCtrl.remove);
 
 module.exports = router;

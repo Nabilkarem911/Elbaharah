@@ -19,6 +19,7 @@ const DailySaleChannel = require('./DailySaleChannel');
 const DeliveryOrder = require('./DeliveryOrder');
 const CancelledInvoice = require('./CancelledInvoice');
 const Setting = require('./Setting');
+const FishWaste = require('./FishWaste');
 
 // Associations
 // User
@@ -40,6 +41,10 @@ FishType.hasMany(PurchaseItem, { foreignKey: 'fish_type_id', as: 'purchaseItems'
 // FishType → FishInventory
 FishType.hasMany(FishInventory, { foreignKey: 'fish_type_id', as: 'inventories' });
 FishInventory.belongsTo(FishType, { foreignKey: 'fish_type_id', as: 'fishType' });
+
+// FishType → FishWaste
+FishType.hasMany(FishWaste, { foreignKey: 'fish_type_id', as: 'wastes' });
+FishWaste.belongsTo(FishType, { foreignKey: 'fish_type_id', as: 'fishType' });
 
 // DailySale
 DailySale.hasMany(PosTransaction, { foreignKey: 'daily_sale_id', as: 'posTransactions' });
@@ -89,4 +94,5 @@ module.exports = {
   DeliveryOrder,
   CancelledInvoice,
   Setting,
+  FishWaste,
 };

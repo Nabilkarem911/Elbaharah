@@ -105,7 +105,7 @@ import { useUiStore } from '../stores/ui.store';
 import {
   Fish, LayoutDashboard, Wallet, CreditCard, ClipboardList, Fish as FishIcon,
   Users, ShoppingCart, BarChart3, Receipt, FileX, FileText, Settings, User,
-  LogOut, Menu, Bell, Calendar, Store, CreditCard as CreditIcon, DollarSign,
+  LogOut, Menu, Bell, Calendar, Store, CreditCard as CreditIcon, DollarSign, Trash2,
 } from 'lucide-vue-next';
 import ToastNotification from '../components/ToastNotification.vue';
 
@@ -126,6 +126,7 @@ const navItems = computed(() => {
     { path: '/suppliers', label: 'الدلالين', icon: Users },
     { path: '/purchases', label: 'المشتريات', icon: ShoppingCart },
     { path: '/statistics', label: 'الإحصائيات', icon: BarChart3 },
+    { path: '/fish-waste', label: 'هدر الأسماك', icon: Trash2 },
     { path: '/expenses', label: 'المصروفات', icon: Receipt },
     { path: '/other-sales', label: 'مبيعات أخرى', icon: Store },
     { path: '/credit-sales', label: 'مبيعات آجل', icon: CreditIcon },

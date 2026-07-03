@@ -12,5 +12,6 @@ router.get('/profit', auth, reports.profit);
 router.get('/pos', auth, reports.pos);
 router.get('/credit', auth, reports.credit);
 router.get('/tax', auth, reports.tax);
+router.get('/waste', auth, reports.waste);
 
 module.exports = router;

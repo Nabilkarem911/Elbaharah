@@ -34,6 +34,10 @@
           <p class="text-xl font-bold tabular-nums">{{ fmt(data.summary.total_other_sales) }}</p>
         </div>
         <div class="card p-4">
+          <p class="text-xs text-gray-500">هدر الأسماك</p>
+          <p class="text-xl font-bold text-danger tabular-nums">{{ fmt(data.summary.total_waste) }}</p>
+        </div>
+        <div class="card p-4">
           <p class="text-xs text-gray-500">إجمالي الربح</p>
           <p class="text-xl font-bold tabular-nums" :class="data.summary.gross_profit >= 0 ? 'text-success' : 'text-danger'">{{ fmt(data.summary.gross_profit) }}</p>
         </div>
@@ -62,6 +66,7 @@ const columns = [
   { key: 'sales', label: 'المبيعات', type: 'currency', sortable: true },
   { key: 'purchases', label: 'المشتريات', type: 'currency', sortable: true },
   { key: 'expenses', label: 'المصروفات', type: 'currency', sortable: true },
+  { key: 'waste', label: 'الهدر', type: 'currency', sortable: true },
   { key: 'profit', label: 'الربح', type: 'currency', sortable: true },
 ];
 

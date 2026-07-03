@@ -39,7 +39,7 @@
 import { reactive, inject } from 'vue';
 import { useRouter } from 'vue-router';
 import {
-  Wallet, Fish, Truck, Users, Receipt, TrendingUp, CreditCard, Clock, Calculator, ChevronLeft, Calendar,
+  Wallet, Fish, Truck, Users, Receipt, TrendingUp, CreditCard, Clock, Calculator, ChevronLeft, Calendar, Trash2,
 } from 'lucide-vue-next';
 import PageHeader from '../../components/PageHeader.vue';
 import DateRangePicker from '../../components/DateRangePicker.vue';
@@ -58,6 +58,7 @@ const reportTypes = [
   { key: 'pos', title: 'تقرير الموازنات', desc: 'حركة كل ماكينة', icon: CreditCard, bg: 'bg-indigo-50', color: 'text-indigo-600' },
   { key: 'credit', title: 'تقرير الآجل', desc: 'مستحقات ومسدد', icon: Clock, bg: 'bg-yellow-50', color: 'text-yellow-600' },
   { key: 'tax', title: 'تقرير الضريبة', desc: 'ضريبة القيمة المضافة', icon: Calculator, bg: 'bg-gray-100', color: 'text-gray-600' },
+  { key: 'waste', title: 'تقرير الهدر', desc: 'هدر الأسماك وأسبابه', icon: Trash2, bg: 'bg-red-50', color: 'text-red-600' },
 ];
 
 const generateReport = (key) => {

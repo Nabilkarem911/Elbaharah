@@ -1,7 +1,7 @@
 const {
   DailySale, Purchase, PurchaseItem, FishType, Supplier, Expense, ExpenseCategory,
   PosMachine, PosTransaction, CreditSale, CreditAccount, DeliveryOrder, DeliveryPlatform,
-  OtherSale, Setting,
+  OtherSale, Setting, FishWaste,
 } = require('../models');
 const { Op } = require('sequelize');
 
@@ -169,31 +169,38 @@ exports.profit = async (req, res, next) => {
     const purchases = await Purchase.findAll({ where: { purchase_date: { [Op.between]: [start, end] } } });
     const expenses = await Expense.findAll({ where: { expense_date: { [Op.between]: [start, end] } } });
     const otherSales = await OtherSale.findAll({ where: { sale_date: { [Op.between]: [start, end] } } });
+    const wastes = await FishWaste.findAll({ where: { waste_date: { [Op.between]: [start, end] } } });
 
     const totalSales = sales.reduce((s, d) => s + parseFloat(d.net_sales), 0);
     const totalOtherSales = otherSales.reduce((s, o) => s + parseFloat(o.total), 0);
     const totalPurchases = purchases.reduce((s, p) => s + parseFloat(p.total_amount), 0);
     const totalExpenses = expenses.reduce((s, e) => s + parseFloat(e.amount), 0);
-    const grossProfit = totalSales + totalOtherSales - totalPurchases;
+    const totalWaste = wastes.reduce((s, w) => s + parseFloat(w.total_cost), 0);
+    const grossProfit = totalSales + totalOtherSales - totalPurchases - totalWaste;
     const netProfit = grossProfit - totalExpenses;
 
     const daily = {};
     sales.forEach(d => {
       const date = d.sale_date;
-      if (!daily[date]) daily[date] = { date, sales: 0, purchases: 0, expenses: 0, profit: 0 };
+      if (!daily[date]) daily[date] = { date, sales: 0, purchases: 0, expenses: 0, waste: 0, profit: 0 };
       daily[date].sales += parseFloat(d.net_sales);
     });
     purchases.forEach(p => {
       const date = p.purchase_date;
-      if (!daily[date]) daily[date] = { date, sales: 0, purchases: 0, expenses: 0, profit: 0 };
+      if (!daily[date]) daily[date] = { date, sales: 0, purchases: 0, expenses: 0, waste: 0, profit: 0 };
       daily[date].purchases += parseFloat(p.total_amount);
     });
     expenses.forEach(e => {
       const date = e.expense_date;
-      if (!daily[date]) daily[date] = { date, sales: 0, purchases: 0, expenses: 0, profit: 0 };
+      if (!daily[date]) daily[date] = { date, sales: 0, purchases: 0, expenses: 0, waste: 0, profit: 0 };
       daily[date].expenses += parseFloat(e.amount);
     });
-    Object.values(daily).forEach(d => { d.profit = d.sales - d.purchases - d.expenses; });
+    wastes.forEach(w => {
+      const date = w.waste_date;
+      if (!daily[date]) daily[date] = { date, sales: 0, purchases: 0, expenses: 0, waste: 0, profit: 0 };
+      daily[date].waste += parseFloat(w.total_cost);
+    });
+    Object.values(daily).forEach(d => { d.profit = d.sales - d.purchases - d.expenses - d.waste; });
 
     res.json({
       summary: {
@@ -201,6 +208,7 @@ exports.profit = async (req, res, next) => {
         total_other_sales: totalOtherSales,
         total_purchases: totalPurchases,
         total_expenses: totalExpenses,
+        total_waste: totalWaste,
         gross_profit: grossProfit,
         net_profit: netProfit,
         days_count: sales.length,
@@ -319,5 +327,42 @@ exports.tax = async (req, res, next) => {
         purchases_excluding_tax: totalPurchases - inputTax,
       },
     });
+  } catch (err) { next(err); }
+};
+
+// 10. Waste Report
+exports.waste = async (req, res, next) => {
+  try {
+    const { start, end } = getDateRange(req);
+    const wastes = await FishWaste.findAll({
+      where: { waste_date: { [Op.between]: [start, end] } },
+      include: [{ model: FishType, as: 'fishType' }],
+      order: [['waste_date', 'DESC']],
+    });
+    const fishMap = {};
+    wastes.forEach(w => {
+      const name = w.fishType ? w.fishType.name : 'غير معروف';
+      if (!fishMap[name]) fishMap[name] = { name, total_weight: 0, total_cost: 0, count: 0 };
+      fishMap[name].total_weight += parseFloat(w.weight);
+      fishMap[name].total_cost += parseFloat(w.total_cost);
+      fishMap[name].count += 1;
+    });
+    const byFish = Object.values(fishMap).sort((a, b) => b.total_cost - a.total_cost);
+    const reasonMap = {};
+    wastes.forEach(w => {
+      const reason = w.reason || 'غير محدد';
+      if (!reasonMap[reason]) reasonMap[reason] = { reason, total_weight: 0, total_cost: 0, count: 0 };
+      reasonMap[reason].total_weight += parseFloat(w.weight);
+      reasonMap[reason].total_cost += parseFloat(w.total_cost);
+      reasonMap[reason].count += 1;
+    });
+    const byReason = Object.values(reasonMap).sort((a, b) => b.total_cost - a.total_cost);
+    const summary = {
+      total_weight: wastes.reduce((s, w) => s + parseFloat(w.weight), 0),
+      total_cost: wastes.reduce((s, w) => s + parseFloat(w.total_cost), 0),
+      count: wastes.length,
+      fish_types_count: byFish.length,
+    };
+    res.json({ summary, byFish, byReason, details: wastes });
   } catch (err) { next(err); }
 };
