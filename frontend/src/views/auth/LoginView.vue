@@ -7,8 +7,8 @@
         <div class="absolute bottom-20 left-10 w-96 h-96 rounded-full bg-primary-300 blur-3xl"></div>
       </div>
       <div class="relative z-10 flex flex-col justify-center px-16 text-white">
-        <div class="w-16 h-16 rounded-2xl bg-gold flex items-center justify-center mb-6 shadow-lg">
-          <Fish class="w-9 h-9 text-primary-700" />
+        <div class="mb-6">
+          <img src="/logo.png" alt="شعار بيت الأسماك" class="w-20 h-20 rounded-2xl object-contain shadow-lg" />
         </div>
         <h1 class="text-4xl font-bold mb-3">بيت الأسماك</h1>
         <p class="text-lg text-primary-200 mb-8 leading-relaxed">
@@ -30,9 +30,7 @@
       <div class="w-full max-w-md">
         <!-- Mobile logo -->
         <div class="lg:hidden flex flex-col items-center mb-8">
-          <div class="w-14 h-14 rounded-2xl bg-primary-500 flex items-center justify-center mb-3 shadow-lg">
-            <Fish class="w-8 h-8 text-gold" />
-          </div>
+          <img src="/logo.png" alt="شعار" class="w-16 h-16 rounded-2xl object-contain mb-3 shadow-lg" />
           <h1 class="text-xl font-bold text-primary-500">بيت الأسماك</h1>
         </div>
 

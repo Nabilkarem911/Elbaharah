@@ -5,17 +5,17 @@ export default {
     extend: {
       colors: {
         primary: {
-          DEFAULT: '#0D3B4F',
-          50: '#E8F0F3',
-          100: '#C5D9E0',
-          200: '#8FB3C0',
-          300: '#5A8DA0',
-          400: '#2A6D85',
-          500: '#0D3B4F',
-          600: '#0A3040',
-          700: '#072530',
-          800: '#051A20',
-          900: '#031015',
+          DEFAULT: '#1A89C8',
+          50: '#E8F4FB',
+          100: '#C5E4F3',
+          200: '#8FCCE8',
+          300: '#5AB5DC',
+          400: '#2A9DCE',
+          500: '#1A89C8',
+          600: '#1574AD',
+          700: '#071746',
+          800: '#051030',
+          900: '#030A1E',
         },
         gold: {
           DEFAULT: '#D4A843',
@@ -30,9 +30,9 @@ export default {
         display: ['Cairo', 'sans-serif'],
       },
       boxShadow: {
-        card: '0 2px 8px rgba(13, 59, 79, 0.08)',
-        'card-hover': '0 4px 16px rgba(13, 59, 79, 0.15)',
-        sidebar: '4px 0 12px rgba(13, 59, 79, 0.1)',
+        card: '0 2px 8px rgba(26, 137, 200, 0.08)',
+        'card-hover': '0 4px 16px rgba(26, 137, 200, 0.15)',
+        sidebar: '4px 0 12px rgba(26, 137, 200, 0.1)',
       },
       animation: {
         'fade-in': 'fadeIn 0.3s ease-out',

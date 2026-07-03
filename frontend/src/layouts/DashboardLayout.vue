@@ -8,9 +8,7 @@
       <div class="flex flex-col h-full">
         <!-- Logo -->
         <div class="flex items-center gap-3 px-5 py-5 border-b border-primary-400/30">
-          <div class="w-10 h-10 rounded-xl bg-gold flex items-center justify-center flex-shrink-0">
-            <Fish class="w-6 h-6 text-primary-700" />
-          </div>
+          <img src="/logo.png" alt="شعار" class="w-12 h-12 rounded-xl object-contain flex-shrink-0" />
           <div>
             <h1 class="font-bold text-base leading-tight">بيت الأسماك</h1>
             <p class="text-xs text-primary-200">نظام الإدارة</p>
