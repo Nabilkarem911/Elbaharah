@@ -2,7 +2,11 @@
   <div class="space-y-6">
     <PageHeader title="الإحصائيات" subtitle="تجميع الأقلام والوزن والأسعار" />
 
-    <div class="card p-4 flex flex-wrap gap-3">
+    <div class="card p-4 flex flex-wrap items-center gap-3">
+      <DateRangePicker
+        v-model:start-date="filterStartDate"
+        v-model:end-date="filterEndDate"
+      />
       <select v-model="filterSupplier" class="input !py-1.5 text-sm w-auto">
         <option value="">كل الدلالين</option>
         <option v-for="s in suppliers" :key="s.id" :value="s.id">{{ s.name }}</option>
@@ -21,6 +25,7 @@
 import { ref, computed, inject, onMounted } from 'vue';
 import PageHeader from '../../components/PageHeader.vue';
 import DataTable from '../../components/DataTable.vue';
+import DateRangePicker from '../../components/DateRangePicker.vue';
 import api from '../../api';
 
 const toast = inject('toast');
@@ -41,11 +46,15 @@ const suppliers = ref([]);
 const fishTypes = ref([]);
 const filterSupplier = ref('');
 const filterFish = ref('');
+const filterStartDate = ref('');
+const filterEndDate = ref('');
 
 const stats = computed(() => {
   let filtered = items.value;
   if (filterSupplier.value) filtered = filtered.filter(i => i.supplier_id == filterSupplier.value);
   if (filterFish.value) filtered = filtered.filter(i => i.fish_type_id == filterFish.value);
+  if (filterStartDate.value) filtered = filtered.filter(i => i.purchase_date >= filterStartDate.value);
+  if (filterEndDate.value) filtered = filtered.filter(i => i.purchase_date <= filterEndDate.value);
 
   const map = {};
   filtered.forEach(i => {

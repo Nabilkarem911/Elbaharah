@@ -9,6 +9,10 @@
 
     <div v-if="purchase" class="space-y-6">
       <div class="flex justify-end gap-2">
+        <router-link :to="`/purchases/${purchase.id}/edit`" class="btn-gold">
+          <Pencil class="w-4 h-4" />
+          <span>تعديل</span>
+        </router-link>
         <button @click="printInvoice" class="btn-outline">
           <Printer class="w-4 h-4" />
           <span>طباعة / PDF</span>
@@ -25,7 +29,14 @@
         </div>
       </div>
 
-      <DataTable :data="purchase.items || []" :columns="columns" title="الأقلام" />
+      <DataTable :data="purchase.items || []" :columns="columns" title="الأقلام">
+        <template #cell-fishType="{ value }">
+          {{ value?.name || '—' }}
+        </template>
+        <template #cell-is_damaged="{ value }">
+          <span :class="value ? 'badge-danger' : 'badge-success'">{{ value ? 'تالف' : 'سليم' }}</span>
+        </template>
+      </DataTable>
     </div>
   </div>
 </template>
@@ -33,7 +44,7 @@
 <script setup>
 import { ref, computed, inject, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
-import { ArrowRight, Printer } from 'lucide-vue-next';
+import { ArrowRight, Printer, Pencil } from 'lucide-vue-next';
 import DataTable from '../../components/DataTable.vue';
 import api from '../../api';
 

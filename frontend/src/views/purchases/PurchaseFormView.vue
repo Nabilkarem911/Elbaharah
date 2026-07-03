@@ -4,7 +4,7 @@
       <router-link to="/purchases" class="p-2 rounded-lg hover:bg-primary-50 text-primary-400">
         <ArrowRight class="w-5 h-5" />
       </router-link>
-      <h2 class="text-xl font-bold text-primary-500">فاتورة شراء جديدة</h2>
+      <h2 class="text-xl font-bold text-primary-500">{{ pageTitle }}</h2>
     </div>
 
     <div class="card p-6 space-y-6">
@@ -122,16 +122,20 @@
 
 <script setup>
 import { ref, reactive, computed, inject, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { ArrowRight, Plus, Trash2, Loader2 } from 'lucide-vue-next';
 import api from '../../api';
 
 const router = useRouter();
+const route = useRoute();
 const toast = inject('toast');
 
 const suppliers = ref([]);
 const fishTypes = ref([]);
 const saving = ref(false);
+
+const isEditing = computed(() => !!route.params.id);
+const pageTitle = computed(() => isEditing.value ? 'تعديل فاتورة شراء' : 'فاتورة شراء جديدة');
 
 const form = reactive({
   invoice_number: '',
@@ -175,12 +179,18 @@ const save = async () => {
   }
   saving.value = true;
   try {
-    await api.post('/purchases', {
+    const payload = {
       ...form,
       total_weight: totalWeight.value,
       total_amount: totalAmount.value,
-    });
-    toast('تم حفظ الفاتورة بنجاح');
+    };
+    if (isEditing.value) {
+      await api.put(`/purchases/${route.params.id}`, payload);
+      toast('تم تعديل الفاتورة بنجاح');
+    } else {
+      await api.post('/purchases', payload);
+      toast('تم حفظ الفاتورة بنجاح');
+    }
     router.push('/purchases');
   } catch (err) {
     toast(err.response?.data?.error || 'فشل الحفظ', 'error');
@@ -197,7 +207,28 @@ onMounted(async () => {
     ]);
     suppliers.value = s.data.data || s.data;
     fishTypes.value = f.data.data || f.data;
-    addItem();
+
+    if (route.params.id) {
+      const { data } = await api.get(`/purchases/${route.params.id}`);
+      Object.assign(form, {
+        invoice_number: data.invoice_number,
+        supplier_id: data.supplier_id,
+        purchase_date: data.purchase_date,
+        payment_method: data.payment_method,
+        notes: data.notes || '',
+        items: (data.items || []).map(i => ({
+          id: i.id,
+          fish_type_id: i.fish_type_id,
+          weight: Number(i.weight),
+          total_price: Number(i.total_price),
+          price_per_kilo: Number(i.price_per_kilo),
+          is_damaged: i.is_damaged,
+          damaged_weight: Number(i.damaged_weight || 0),
+        })),
+      });
+    } else {
+      addItem();
+    }
   } catch (err) {
     toast('فشل تحميل البيانات', 'error');
   }
