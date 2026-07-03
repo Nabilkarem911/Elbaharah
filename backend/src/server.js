@@ -35,6 +35,25 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+app.get('/api/routes', (req, res) => {
+  const routes = [];
+  function walk(stack, prefix) {
+    if (!prefix) prefix = '';
+    for (const layer of stack) {
+      if (layer.route) {
+        const methods = Object.keys(layer.route.methods).map(m => m.toUpperCase());
+        routes.push(methods.join(',') + ' ' + prefix + layer.route.path);
+      } else if (layer.name === 'router' && layer.handle && layer.handle.stack) {
+        let p = prefix;
+        if (layer.path) p = prefix + layer.path;
+        walk(layer.handle.stack, p);
+      }
+    }
+  }
+  walk(app._router.stack);
+  res.json({ routes });
+});
+
 app.use('/api/auth', authRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api', apiRoutes);
