@@ -7,22 +7,22 @@ const seeders = [
   {
     name: '01-admin',
     clean: async () => { await User.destroy({ where: { username: ['admin', 'manager'] } }); },
-    up: require('./seeders/01-admin.seeder'),
+    run: require('./seeders/01-admin.seeder'),
   },
   {
     name: '02-suppliers',
     clean: async () => { await Supplier.destroy({ where: {}, truncate: true, cascade: false }); },
-    up: require('./seeders/02-suppliers.seeder'),
+    run: require('./seeders/02-suppliers.seeder'),
   },
   {
     name: '03-fishTypes',
     clean: async () => { await FishType.destroy({ where: {}, truncate: true, cascade: false }); },
-    up: require('./seeders/03-fishTypes.seeder'),
+    run: require('./seeders/03-fishTypes.seeder'),
   },
   {
     name: '04-expenseCategories',
     clean: async () => { await ExpenseCategory.destroy({ where: {}, truncate: true, cascade: false }); },
-    up: require('./seeders/04-expenseCategories.seeder'),
+    run: require('./seeders/04-expenseCategories.seeder'),
   },
   {
     name: '05-system',
@@ -34,7 +34,7 @@ const seeders = [
         Setting.destroy({ where: {}, truncate: true, cascade: false }),
       ]);
     },
-    up: require('./seeders/05-system.seeder'),
+    run: require('./seeders/05-system.seeder'),
   },
 ];
 
@@ -52,7 +52,7 @@ const runSeeds = async () => {
       console.log(`🧹 Cleaning: ${seeder.name}...`);
       await seeder.clean();
       console.log(`🌱 Running seeder: ${seeder.name}...`);
-      await seeder.up();
+      await seeder.run.up();
       console.log(`✅ ${seeder.name} done`);
     }
 
