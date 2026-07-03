@@ -80,8 +80,12 @@ const filteredSuppliers = computed(() =>
 );
 
 const loadData = async () => {
-  const { data } = await api.get('/suppliers', { params: { limit: 500 } });
-  suppliers.value = data.data || data;
+  try {
+    const { data } = await api.get('/suppliers', { params: { limit: 500 } });
+    suppliers.value = data.data || data;
+  } catch (err) {
+    toast('فشل تحميل البيانات', 'error');
+  }
 };
 
 const openModal = (row = null) => {

@@ -65,8 +65,12 @@ const totalAmount = computed(() => invoices.value.reduce((s, i) => s + Number(i.
 const totalReturned = computed(() => invoices.value.reduce((s, i) => s + Number(i.returned_amount), 0));
 
 const loadData = async () => {
-  const { data } = await api.get('/cancelled-invoices', { params: { limit: 500 } });
-  invoices.value = data.data || data;
+  try {
+    const { data } = await api.get('/cancelled-invoices', { params: { limit: 500 } });
+    invoices.value = data.data || data;
+  } catch (err) {
+    toast('فشل تحميل البيانات', 'error');
+  }
 };
 
 const openModal = (row = null) => {

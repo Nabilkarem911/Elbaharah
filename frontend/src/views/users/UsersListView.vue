@@ -72,8 +72,12 @@ const roleLabel = (v) => roleLabels[v] || v;
 const roleBadge = (v) => ({ admin: 'badge-gold', manager: 'badge-info', cashier: 'badge-success', accountant: 'badge-info' }[v] || 'badge-info');
 
 const loadData = async () => {
-  const { data } = await api.get('/users', { params: { limit: 100 } });
-  users.value = data.data || data;
+  try {
+    const { data } = await api.get('/users', { params: { limit: 100 } });
+    users.value = data.data || data;
+  } catch (err) {
+    toast('فشل تحميل البيانات', 'error');
+  }
 };
 
 const openModal = (row = null) => {

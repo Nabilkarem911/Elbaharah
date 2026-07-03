@@ -106,7 +106,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, inject } from 'vue';
 import { Line, Doughnut, Bar } from 'vue-chartjs';
 import {
   Chart as ChartJS, CategoryScale, LinearScale, PointElement,
@@ -124,6 +124,8 @@ const monthData = ref({ total_sales: 0, total_purchases: 0, total_expenses: 0, n
 const chartData = ref({ salesChart: [], channelTotals: {}, top5Suppliers: [] });
 const recentPurchases = ref([]);
 
+const toast = inject('toast');
+
 onMounted(async () => {
   try {
     const [today, month, charts, purchases] = await Promise.all([
@@ -137,7 +139,7 @@ onMounted(async () => {
     chartData.value = charts.data;
     recentPurchases.value = purchases.data.data || [];
   } catch (err) {
-    console.error('Dashboard load error:', err);
+    toast('فشل تحميل الداشبورد', 'error');
   }
 });
 

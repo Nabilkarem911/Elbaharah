@@ -52,8 +52,12 @@ const editing = ref(false);
 const form = reactive({ sale_date: new Date().toISOString().split('T')[0], item_name: '', unit_price: 0, quantity: 1 });
 
 const loadData = async () => {
-  const { data } = await api.get('/other-sales', { params: { limit: 500 } });
-  sales.value = data.data || data;
+  try {
+    const { data } = await api.get('/other-sales', { params: { limit: 500 } });
+    sales.value = data.data || data;
+  } catch (err) {
+    toast('فشل تحميل البيانات', 'error');
+  }
 };
 
 const openModal = (row = null) => {

@@ -71,12 +71,16 @@ const totalPaid = computed(() => sales.value.filter(i => i.is_paid).reduce((s, i
 const totalUnpaid = computed(() => sales.value.filter(i => !i.is_paid).reduce((s, i) => s + Number(i.amount), 0));
 
 const loadData = async () => {
-  const [s, a] = await Promise.all([
-    api.get('/credit/sales', { params: { limit: 500 } }),
-    api.get('/credit/accounts', { params: { limit: 500 } }),
-  ]);
-  sales.value = (s.data.data || s.data).map(i => ({ ...i, account: i.account?.company_name }));
-  accounts.value = a.data.data || a.data;
+  try {
+    const [s, a] = await Promise.all([
+      api.get('/credit/sales', { params: { limit: 500 } }),
+      api.get('/credit/accounts', { params: { limit: 500 } }),
+    ]);
+    sales.value = (s.data.data || s.data).map(i => ({ ...i, account: i.account?.company_name }));
+    accounts.value = a.data.data || a.data;
+  } catch (err) {
+    toast('فشل تحميل البيانات', 'error');
+  }
 };
 
 const togglePaid = async (row) => {

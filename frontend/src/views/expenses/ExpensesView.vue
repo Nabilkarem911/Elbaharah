@@ -89,12 +89,16 @@ const topCategory = computed(() => {
 });
 
 const loadData = async () => {
-  const [e, c] = await Promise.all([
-    api.get('/expenses', { params: { limit: 500 } }),
-    api.get('/expense-categories', { params: { limit: 100 } }),
-  ]);
-  expenses.value = e.data.data || e.data;
-  categories.value = c.data.data || c.data;
+  try {
+    const [e, c] = await Promise.all([
+      api.get('/expenses', { params: { limit: 500 } }),
+      api.get('/expense-categories', { params: { limit: 100 } }),
+    ]);
+    expenses.value = e.data.data || e.data;
+    categories.value = c.data.data || c.data;
+  } catch (err) {
+    toast('فشل تحميل البيانات', 'error');
+  }
 };
 
 const openModal = (row = null) => {
