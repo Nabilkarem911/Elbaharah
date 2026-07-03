@@ -31,10 +31,8 @@ const runSeeds = async () => {
     await sequelize.authenticate();
     console.log('✅ Database connected');
 
-    console.log('📦 Dropping all tables...');
-    await sequelize.drop();
-    console.log('📦 Recreating all tables...');
-    await sequelize.sync();
+    console.log('📦 Recreating all tables (force)...');
+    await sequelize.sync({ force: true });
     console.log('✅ Models synced');
 
     for (const seeder of seeders) {
