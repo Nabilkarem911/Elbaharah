@@ -75,21 +75,9 @@
           <label class="label">الصندوق</label>
           <input type="number" step="0.01" v-model="form.cash_box" class="input tabular-nums" />
         </div>
-        <div>
-          <label class="label">تطبيق البحارة</label>
-          <input type="number" step="0.01" v-model="form.app_elbharah" class="input tabular-nums" />
-        </div>
-        <div>
-          <label class="label">هنقر ستيشن</label>
-          <input type="number" step="0.01" v-model="form.hunger_station" class="input tabular-nums" />
-        </div>
-        <div>
-          <label class="label">كيتا</label>
-          <input type="number" step="0.01" v-model="form.keta" class="input tabular-nums" />
-        </div>
-        <div>
-          <label class="label">تويو</label>
-          <input type="number" step="0.01" v-model="form.toyo" class="input tabular-nums" />
+        <div v-for="p in deliveryPlatforms" :key="p.id">
+          <label class="label">{{ p.name }}</label>
+          <input type="number" step="0.01" v-model="form[p.key]" class="input tabular-nums" />
         </div>
         <div>
           <label class="label">مدى</label>
@@ -157,26 +145,32 @@ import api from '../../api';
 
 const toast = inject('toast');
 
-const columns = [
-  { key: 'sale_date', label: 'التاريخ', sortable: true },
-  { key: 'day_name', label: 'اليوم' },
-  { key: 'total_sales', label: 'إجمالي المبيعات', type: 'currency', sortable: true },
-  { key: 'other_sales', label: 'مبيعات أخرى', type: 'currency' },
-  { key: 'credit_sales', label: 'آجل', type: 'currency' },
-  { key: 'cash_box', label: 'الصندوق', type: 'currency' },
-  { key: 'app_elbharah', label: 'البحارة', type: 'currency' },
-  { key: 'hunger_station', label: 'هنقر', type: 'currency' },
-  { key: 'keta', label: 'كيتا', type: 'currency' },
-  { key: 'toyo', label: 'تويو', type: 'currency' },
-  { key: 'mada', label: 'مدى', type: 'currency' },
-  { key: 'visa', label: 'فيزا', type: 'currency' },
-  { key: 'mastercard', label: 'ماستر', type: 'currency' },
-  { key: 'net_sales', label: 'الصافي', type: 'currency', sortable: true },
-  { key: 'surplus_deficit', label: 'فائض/عجز', type: 'currency', sortable: true },
-  { key: 'network_sales', label: 'الشبكة', type: 'currency' },
-  { key: 'delivery_sales', label: 'توصيل', type: 'currency' },
-  { key: 'delivery_orders_count', label: 'طلبات', type: 'number' },
-];
+const deliveryPlatforms = ref([]);
+
+const columns = computed(() => {
+  const base = [
+    { key: 'sale_date', label: 'التاريخ', sortable: true },
+    { key: 'day_name', label: 'اليوم' },
+    { key: 'total_sales', label: 'إجمالي المبيعات', type: 'currency', sortable: true },
+    { key: 'other_sales', label: 'مبيعات أخرى', type: 'currency' },
+    { key: 'credit_sales', label: 'آجل', type: 'currency' },
+    { key: 'cash_box', label: 'الصندوق', type: 'currency' },
+  ];
+  for (const p of deliveryPlatforms.value) {
+    base.push({ key: p.key, label: p.name, type: 'currency' });
+  }
+  base.push(
+    { key: 'mada', label: 'مدى', type: 'currency' },
+    { key: 'visa', label: 'فيزا', type: 'currency' },
+    { key: 'mastercard', label: 'ماستر', type: 'currency' },
+    { key: 'net_sales', label: 'الصافي', type: 'currency', sortable: true },
+    { key: 'surplus_deficit', label: 'فائض/عجز', type: 'currency', sortable: true },
+    { key: 'network_sales', label: 'الشبكة', type: 'currency' },
+    { key: 'delivery_sales', label: 'توصيل', type: 'currency' },
+    { key: 'delivery_orders_count', label: 'طلبات', type: 'number' },
+  );
+  return base;
+});
 
 const sales = ref([]);
 const page = ref(1);
@@ -190,19 +184,27 @@ const editing = ref(false);
 const saving = ref(false);
 const form = reactive({});
 
-const emptyForm = () => ({
-  sale_date: new Date().toISOString().split('T')[0],
-  total_sales: 0, other_sales: 0, credit_sales: 0,
-  cash_box: 0, app_elbharah: 0, hunger_station: 0, keta: 0, toyo: 0,
-  mada: 0, visa: 0, mastercard: 0,
-  delivery_sales: 0, delivery_orders_count: 0, notes: '',
-});
+const emptyForm = () => {
+  const f = {
+    sale_date: new Date().toISOString().split('T')[0],
+    total_sales: 0, other_sales: 0, credit_sales: 0,
+    cash_box: 0, mada: 0, visa: 0, mastercard: 0,
+    delivery_sales: 0, delivery_orders_count: 0, notes: '',
+  };
+  for (const p of deliveryPlatforms.value) {
+    f[p.key] = 0;
+  }
+  return f;
+};
 
-const netSales = computed(() =>
-  Number(form.cash_box || 0) + Number(form.app_elbharah || 0) + Number(form.hunger_station || 0) +
-  Number(form.keta || 0) + Number(form.toyo || 0) + Number(form.mada || 0) +
-  Number(form.visa || 0) + Number(form.mastercard || 0)
-);
+const netSales = computed(() => {
+  let total = Number(form.cash_box || 0) + Number(form.mada || 0) +
+    Number(form.visa || 0) + Number(form.mastercard || 0);
+  for (const p of deliveryPlatforms.value) {
+    total += Number(form[p.key] || 0);
+  }
+  return total;
+});
 const networkSales = computed(() => Number(form.mada || 0) + Number(form.visa || 0) + Number(form.mastercard || 0));
 const surplusDeficit = computed(() => netSales.value - Number(form.total_sales || 0));
 
@@ -217,6 +219,15 @@ const loadData = async () => {
     totalPages.value = data.totalPages;
   } catch (err) {
     toast('فشل تحميل البيانات', 'error');
+  }
+};
+
+const loadDeliveryPlatforms = async () => {
+  try {
+    const { data } = await api.get('/delivery-platforms', { params: { limit: 100 } });
+    deliveryPlatforms.value = (data.data || data).filter(p => p.is_active);
+  } catch (err) {
+    toast('فشل تحميل تطبيقات التوصيل', 'error');
   }
 };
 
@@ -269,5 +280,8 @@ const handleExport = (type) => {
   toast(`تصدير ${type.toUpperCase()} — قيد التطوير`, 'info');
 };
 
-onMounted(loadData);
+onMounted(() => {
+  loadDeliveryPlatforms();
+  loadData();
+});
 </script>

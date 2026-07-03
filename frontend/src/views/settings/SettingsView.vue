@@ -39,13 +39,16 @@
         <input v-model="posForm.machine_number" class="input max-w-xs" placeholder="رقم الجهاز" type="number" />
         <input v-model="posForm.terminal_id" class="input max-w-xs" placeholder="رقم الترمنال" />
         <input v-model="posForm.bank" class="input max-w-xs" placeholder="البنك" />
-        <button @click="savePos" class="btn-gold"><Plus class="w-4 h-4" /> إضافة</button>
+        <button v-if="!editingPos" @click="savePos" class="btn-gold"><Plus class="w-4 h-4" /> إضافة</button>
+        <button v-else @click="updatePos" class="btn-gold"><Loader2 v-if="savingPos" class="w-4 h-4 animate-spin" /> حفظ التعديل</button>
+        <button v-if="editingPos" @click="cancelEditPos" class="btn-ghost">إلغاء</button>
       </div>
       <DataTable :data="posMachines" :columns="posColumns">
         <template #cell-is_active="{ value }">
           <span :class="value ? 'badge-success' : 'badge-danger'">{{ value ? 'نشط' : 'موقوف' }}</span>
         </template>
         <template #actions="{ row }">
+          <button @click="editPos(row)" class="p-1.5 rounded-lg hover:bg-primary-50 text-primary-400"><Pencil class="w-4 h-4" /></button>
           <button @click="deleteItem(row, 'pos/machines')" class="p-1.5 rounded-lg hover:bg-red-50 text-red-400"><Trash2 class="w-4 h-4" /></button>
         </template>
       </DataTable>
@@ -126,7 +129,7 @@
 
 <script setup>
 import { ref, reactive, inject, onMounted } from 'vue';
-import { Plus, Trash2, Power } from 'lucide-vue-next';
+import { Plus, Trash2, Power, Pencil, Loader2 } from 'lucide-vue-next';
 import PageHeader from '../../components/PageHeader.vue';
 import DataTable from '../../components/DataTable.vue';
 import api from '../../api';
@@ -152,6 +155,9 @@ const settings = reactive({ restaurant_name: '', phone: '', tax_rate: 15, curren
 
 const fishForm = reactive({ name: '', name_en: '' });
 const posForm = reactive({ machine_number: '', terminal_id: '', bank: '' });
+const editingPos = ref(false);
+const editingPosId = ref(null);
+const savingPos = ref(false);
 const delForm = reactive({ name: '', key: '' });
 const expForm = reactive({ code: '', name: '' });
 const chForm = reactive({ key: '', name: '', type: 'cash' });
@@ -215,6 +221,30 @@ const savePos = async () => {
   if (!posForm.machine_number) return;
   try { await api.post('/pos/machines', posForm); toast('تم الإضافة'); Object.assign(posForm, { machine_number: '', terminal_id: '', bank: '' }); loadAll(); }
   catch (err) { toast(err.response?.data?.error || 'فشل', 'error'); }
+};
+const editPos = (row) => {
+  editingPos.value = true;
+  editingPosId.value = row.id;
+  Object.assign(posForm, { machine_number: row.machine_number, terminal_id: row.terminal_id, bank: row.bank });
+};
+const cancelEditPos = () => {
+  editingPos.value = false;
+  editingPosId.value = null;
+  Object.assign(posForm, { machine_number: '', terminal_id: '', bank: '' });
+};
+const updatePos = async () => {
+  if (!posForm.machine_number) return;
+  savingPos.value = true;
+  try {
+    await api.put(`/pos/machines/${editingPosId.value}`, posForm);
+    toast('تم تعديل الجهاز');
+    cancelEditPos();
+    loadAll();
+  } catch (err) {
+    toast(err.response?.data?.error || 'فشل', 'error');
+  } finally {
+    savingPos.value = false;
+  }
 };
 const saveDelivery = async () => {
   if (!delForm.name) return;
