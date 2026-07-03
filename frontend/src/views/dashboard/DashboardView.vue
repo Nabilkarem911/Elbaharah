@@ -1,5 +1,29 @@
 <template>
   <div class="space-y-6">
+    <!-- Notifications -->
+    <div v-if="alerts.length" class="space-y-3">
+      <router-link
+        v-for="alert in alerts"
+        :key="alert.type"
+        :to="alert.link"
+        class="card p-4 flex items-center gap-3 hover:shadow-card-hover transition-shadow"
+      >
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+          :class="alert.color === 'danger' ? 'bg-red-50' : 'bg-yellow-50'"
+        >
+          <component :is="alert.icon === 'clock' ? Clock : alert.icon === 'package' ? Package : AlertCircle"
+            class="w-5 h-5"
+            :class="alert.color === 'danger' ? 'text-danger' : 'text-yellow-600'"
+          />
+        </div>
+        <div class="flex-1">
+          <p class="font-bold text-sm" :class="alert.color === 'danger' ? 'text-danger' : 'text-yellow-600'">{{ alert.title }}</p>
+          <p class="text-xs text-gray-500">{{ alert.message }}</p>
+        </div>
+        <ChevronLeft class="w-4 h-4 text-gray-400" />
+      </router-link>
+    </div>
+
     <!-- Stat Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <StatCard
@@ -62,6 +86,101 @@
       />
     </div>
 
+    <!-- Insights Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div class="card p-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gold/10 flex items-center justify-center">
+            <Trophy class="w-5 h-5 text-gold-dark" />
+          </div>
+          <div>
+            <p class="text-xs text-gray-500">أفضل يوم مبيعات</p>
+            <p class="font-bold text-primary-500 tabular-nums">{{ insights.best_day ? Number(insights.best_day.amount).toLocaleString('en-US', { minimumFractionDigits: 2 }) + ' ر.س' : '—' }}</p>
+            <p class="text-xs text-gray-400">{{ insights.best_day?.date || '' }}</p>
+          </div>
+        </div>
+      </div>
+      <div class="card p-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
+            <Fish class="w-5 h-5 text-blue-600" />
+          </div>
+          <div>
+            <p class="text-xs text-gray-500">أكثر نوع سمك</p>
+            <p class="font-bold text-primary-500">{{ insights.top_fish?.name || '—' }}</p>
+            <p class="text-xs text-gray-400">{{ insights.top_fish ? Number(insights.top_fish.weight).toFixed(3) + ' كجم' : '' }}</p>
+          </div>
+        </div>
+      </div>
+      <div class="card p-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center">
+            <Users class="w-5 h-5 text-purple-600" />
+          </div>
+          <div>
+            <p class="text-xs text-gray-500">أكثر دلال</p>
+            <p class="font-bold text-primary-500">{{ insights.top_supplier?.name || '—' }}</p>
+            <p class="text-xs text-gray-400">{{ insights.top_supplier ? Number(insights.top_supplier.amount).toLocaleString('en-US', { minimumFractionDigits: 2 }) + ' ر.س' : '' }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Performance Indicator -->
+    <div class="card p-5">
+      <h3 class="font-bold text-primary-500 text-base mb-4">مؤشر الأداء — مقارنة بالشهر السابق</h3>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-sm text-gray-600">المبيعات</span>
+            <span class="text-sm font-bold tabular-nums" :class="insights.performance.sales_growth >= 0 ? 'text-success' : 'text-danger'">
+              {{ insights.performance.sales_growth >= 0 ? '▲' : '▼' }} {{ Math.abs(insights.performance.sales_growth).toFixed(1) }}%
+            </span>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="flex-1">
+              <p class="text-xs text-gray-400">الشهر الحالي</p>
+              <p class="font-bold text-primary-500 tabular-nums">{{ Number(insights.performance.current_sales).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</p>
+            </div>
+            <div class="flex-1">
+              <p class="text-xs text-gray-400">الشهر السابق</p>
+              <p class="font-bold text-gray-500 tabular-nums">{{ Number(insights.performance.previous_sales).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</p>
+            </div>
+          </div>
+          <div class="mt-2 h-2 bg-gray-100 rounded-full overflow-hidden">
+            <div class="h-full rounded-full transition-all duration-500"
+              :class="insights.performance.sales_growth >= 0 ? 'bg-success' : 'bg-danger'"
+              :style="{ width: Math.min(Math.abs(insights.performance.sales_growth), 100) + '%' }"
+            />
+          </div>
+        </div>
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-sm text-gray-600">المشتريات</span>
+            <span class="text-sm font-bold tabular-nums" :class="insights.performance.purchases_growth >= 0 ? 'text-success' : 'text-danger'">
+              {{ insights.performance.purchases_growth >= 0 ? '▲' : '▼' }} {{ Math.abs(insights.performance.purchases_growth).toFixed(1) }}%
+            </span>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="flex-1">
+              <p class="text-xs text-gray-400">الشهر الحالي</p>
+              <p class="font-bold text-primary-500 tabular-nums">{{ Number(insights.performance.current_purchases).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</p>
+            </div>
+            <div class="flex-1">
+              <p class="text-xs text-gray-400">الشهر السابق</p>
+              <p class="font-bold text-gray-500 tabular-nums">{{ Number(insights.performance.previous_purchases).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</p>
+            </div>
+          </div>
+          <div class="mt-2 h-2 bg-gray-100 rounded-full overflow-hidden">
+            <div class="h-full rounded-full transition-all duration-500"
+              :class="insights.performance.purchases_growth >= 0 ? 'bg-success' : 'bg-danger'"
+              :style="{ width: Math.min(Math.abs(insights.performance.purchases_growth), 100) + '%' }"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Charts -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <ChartCard title="المبيعات اليومية خلال الشهر">
@@ -112,7 +231,7 @@ import {
   Chart as ChartJS, CategoryScale, LinearScale, PointElement,
   LineElement, ArcElement, BarElement, Title, Tooltip, Legend, Filler,
 } from 'chart.js';
-import { Wallet, ShoppingCart, Receipt, TrendingUp, BarChart3, Fish, Truck, FileText, Inbox } from 'lucide-vue-next';
+import { Wallet, ShoppingCart, Receipt, TrendingUp, BarChart3, Fish, Truck, FileText, Inbox, Trophy, Users, Clock, Package, AlertCircle, ChevronLeft } from 'lucide-vue-next';
 import StatCard from '../../components/StatCard.vue';
 import ChartCard from '../../components/ChartCard.vue';
 import api from '../../api';
@@ -123,35 +242,41 @@ const todayData = ref({ total_sales: 0, total_purchases: 0, total_expenses: 0, n
 const monthData = ref({ total_sales: 0, total_purchases: 0, total_expenses: 0, net_profit: 0, days_count: 0 });
 const chartData = ref({ salesChart: [], channelTotals: {}, top5Suppliers: [] });
 const recentPurchases = ref([]);
+const insights = ref({ best_day: null, top_fish: null, top_supplier: null, performance: { current_sales: 0, previous_sales: 0, sales_growth: 0, current_purchases: 0, previous_purchases: 0, purchases_growth: 0 } });
+const alerts = ref([]);
 
 const toast = inject('toast');
 
 onMounted(async () => {
   try {
-    const [today, month, charts, purchases] = await Promise.all([
+    const [today, month, charts, purchases, ins, notif] = await Promise.all([
       api.get('/dashboard/today'),
       api.get('/dashboard/month'),
       api.get('/dashboard/charts'),
       api.get('/purchases', { params: { limit: 5 } }),
+      api.get('/dashboard/insights'),
+      api.get('/dashboard/notifications'),
     ]);
     todayData.value = today.data;
     monthData.value = month.data;
     chartData.value = charts.data;
     recentPurchases.value = purchases.data.data || [];
+    insights.value = ins.data;
+    alerts.value = notif.data.alerts;
   } catch (err) {
     toast('فشل تحميل الداشبورد', 'error');
   }
 });
 
-const chartColors = ['#0D3B4F', '#D4A843', '#16A34A', '#DC2626', '#2563EB', '#7C3AED', '#EA580C', '#0891B2'];
+const chartColors = ['#071746', '#D4A843', '#16A34A', '#DC2626', '#2563EB', '#7C3AED', '#EA580C', '#0891B2'];
 
 const salesChartData = computed(() => ({
   labels: chartData.value.salesChart.map(d => d.date?.slice(5) || ''),
   datasets: [{
     label: 'المبيعات',
     data: chartData.value.salesChart.map(d => d.total),
-    borderColor: '#0D3B4F',
-    backgroundColor: 'rgba(13, 59, 79, 0.1)',
+    borderColor: '#071746',
+    backgroundColor: 'rgba(7, 23, 70, 0.1)',
     fill: true,
     tension: 0.3,
   }],

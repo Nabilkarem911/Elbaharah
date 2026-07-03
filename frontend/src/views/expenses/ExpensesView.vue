@@ -2,6 +2,7 @@
   <div class="space-y-6">
     <PageHeader title="المصروفات" subtitle="50 تصنيف — بيان نفقات المطعم">
       <template #actions>
+        <ExportButton :data="filtered" :columns="columns" filename="المصروفات" title="بيان المصروفات" />
         <button @click="openModal()" class="btn-gold"><Plus class="w-4 h-4" /> مصروف جديد</button>
       </template>
     </PageHeader>
@@ -19,7 +20,7 @@
       </select>
     </div>
 
-    <DataTable :data="filtered" :columns="columns">
+    <DataTable :data="filtered" :columns="columns" searchable>
       <template #cell-category="{ value }">
         <span class="font-medium">{{ value?.name || '—' }}</span>
       </template>
@@ -61,6 +62,7 @@ import PageHeader from '../../components/PageHeader.vue';
 import DataTable from '../../components/DataTable.vue';
 import StatCard from '../../components/StatCard.vue';
 import Modal from '../../components/Modal.vue';
+import ExportButton from '../../components/ExportButton.vue';
 import api from '../../api';
 
 const toast = inject('toast');

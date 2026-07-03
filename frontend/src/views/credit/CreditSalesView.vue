@@ -2,6 +2,7 @@
   <div class="space-y-6">
     <PageHeader title="مبيعات آجل" subtitle="حسابات الآجل والمستحقات">
       <template #actions>
+        <ExportButton :data="sales" :columns="exportColumns" filename="المبيعات_الآجلة" title="المبيعات الآجلة" />
         <button @click="openModal()" class="btn-gold"><Plus class="w-4 h-4" /> مبيعة آجل</button>
       </template>
     </PageHeader>
@@ -12,7 +13,13 @@
       <StatCard title="غير مسدد" :value="totalUnpaid" :icon="Clock" color="warning" suffix=" ر.س" />
     </div>
 
-    <DataTable :data="sales" :columns="columns">
+    <DataTable :data="sales" :columns="columns" searchable>
+      <template #cell-account="{ value, row }">
+        <span class="font-medium" :class="isOverdue(row) ? 'text-danger' : ''">{{ value }}</span>
+      </template>
+      <template #cell-due_date="{ value, row }">
+        <span :class="isOverdue(row) ? 'text-danger font-bold' : ''">{{ value }}</span>
+      </template>
       <template #cell-is_paid="{ value, row }">
         <button @click="togglePaid(row)" :class="value ? 'badge-success' : 'badge-warning'">
           {{ value ? 'مسدد' : 'غير مسدد' }}
@@ -50,6 +57,7 @@ import PageHeader from '../../components/PageHeader.vue';
 import DataTable from '../../components/DataTable.vue';
 import StatCard from '../../components/StatCard.vue';
 import Modal from '../../components/Modal.vue';
+import ExportButton from '../../components/ExportButton.vue';
 import api from '../../api';
 
 const toast = inject('toast');
@@ -60,6 +68,21 @@ const columns = [
   { key: 'amount', label: 'المبلغ', type: 'currency', sortable: true },
   { key: 'is_paid', label: 'الحالة' },
 ];
+
+const exportColumns = [
+  { key: 'account', label: 'الشركة' },
+  { key: 'sale_date', label: 'تاريخ البيع' },
+  { key: 'due_date', label: 'تاريخ السداد' },
+  { key: 'amount', label: 'المبلغ' },
+  { key: 'is_paid', label: 'الحالة' },
+];
+
+const isOverdue = (row) => {
+  if (row.is_paid) return false;
+  if (!row.due_date) return false;
+  const today = new Date().toISOString().split('T')[0];
+  return row.due_date < today;
+};
 
 const sales = ref([]);
 const accounts = ref([]);

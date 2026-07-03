@@ -2,6 +2,7 @@
   <div class="space-y-6">
     <PageHeader title="المشتريات" subtitle="فواتير شراء الأسماك من الدلالين">
       <template #actions>
+        <ExportButton :data="filteredPurchases" :columns="exportColumns" filename="المشتريات" title="فواتير المشتريات" />
         <router-link to="/purchases/new" class="btn-gold">
           <Plus class="w-4 h-4" /> فاتورة جديدة
         </router-link>
@@ -15,7 +16,7 @@
       </select>
     </div>
 
-    <DataTable :data="filteredPurchases" :columns="columns">
+    <DataTable :data="filteredPurchases" :columns="columns" searchable>
       <template #cell-supplier="{ value }">
         <span class="font-medium">{{ value?.name || '—' }}</span>
       </template>
@@ -33,6 +34,7 @@ import { ref, computed, inject, onMounted } from 'vue';
 import { Plus, Eye } from 'lucide-vue-next';
 import PageHeader from '../../components/PageHeader.vue';
 import DataTable from '../../components/DataTable.vue';
+import ExportButton from '../../components/ExportButton.vue';
 import api from '../../api';
 
 const toast = inject('toast');
@@ -43,6 +45,15 @@ const columns = [
   { key: 'supplier', label: 'الدلال' },
   { key: 'total_weight', label: 'الوزن', type: 'weight' },
   { key: 'total_amount', label: 'المبلغ', type: 'currency', sortable: true },
+  { key: 'payment_method', label: 'الدفع' },
+];
+
+const exportColumns = [
+  { key: 'invoice_number', label: 'رقم الفاتورة' },
+  { key: 'purchase_date', label: 'التاريخ' },
+  { key: 'supplier_name', label: 'الدلال' },
+  { key: 'total_weight', label: 'الوزن' },
+  { key: 'total_amount', label: 'المبلغ' },
   { key: 'payment_method', label: 'الدفع' },
 ];
 

@@ -28,6 +28,7 @@ const routes = [
       { path: 'expenses', name: 'expenses', component: () => import('../views/expenses/ExpensesView.vue') },
       { path: 'other-sales', name: 'other-sales', component: () => import('../views/other-sales/OtherSalesView.vue') },
       { path: 'credit-sales', name: 'credit-sales', component: () => import('../views/credit/CreditSalesView.vue') },
+      { path: 'credit-settlement', name: 'credit-settlement', component: () => import('../views/credit/CreditSettlementView.vue') },
       { path: 'cancelled-invoices', name: 'cancelled-invoices', component: () => import('../views/cancelled/CancelledInvoicesView.vue') },
       { path: 'reports', name: 'reports', component: () => import('../views/reports/ReportsHubView.vue') },
       { path: 'reports/sales', name: 'report-sales', component: () => import('../views/reports/SalesReportView.vue') },
