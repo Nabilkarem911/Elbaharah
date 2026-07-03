@@ -25,7 +25,6 @@
                 <th class="px-3 py-2.5 text-right font-medium text-gray-500 whitespace-nowrap">تطبيق البحارة</th>
                 <th class="px-3 py-2.5 text-right font-medium text-gray-500 whitespace-nowrap">هنقر ستيشن</th>
                 <th class="px-3 py-2.5 text-right font-medium text-gray-500 whitespace-nowrap">كيتا</th>
-                <th class="px-3 py-2.5 text-right font-medium text-gray-500 whitespace-nowrap">تويو</th>
                 <th class="px-3 py-2.5 text-right font-medium text-gray-500 whitespace-nowrap">مبيعات أخرى</th>
                 <th class="px-3 py-2.5 text-right font-medium text-gray-500 whitespace-nowrap">مبيعات الآجل</th>
                 <th class="px-3 py-2.5 text-right font-medium text-gray-500 whitespace-nowrap">الفواتير الملغاة</th>
@@ -45,7 +44,6 @@
                 <td class="px-3 py-2.5 tabular-nums">{{ fmt(p.sales.app_elbharah) }}</td>
                 <td class="px-3 py-2.5 tabular-nums">{{ fmt(p.sales.hunger_station) }}</td>
                 <td class="px-3 py-2.5 tabular-nums">{{ fmt(p.sales.keta) }}</td>
-                <td class="px-3 py-2.5 tabular-nums">{{ fmt(p.sales.toyo) }}</td>
                 <td class="px-3 py-2.5 tabular-nums">{{ fmt(p.sales.other_sales_total) }}</td>
                 <td class="px-3 py-2.5 tabular-nums">{{ fmt(p.sales.credit_sales) }}</td>
                 <td class="px-3 py-2.5 tabular-nums text-red-500">{{ fmt(p.sales.cancelled) }}</td>

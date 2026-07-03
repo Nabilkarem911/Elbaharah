@@ -99,6 +99,7 @@
 
 <script setup>
 import { computed, reactive, provide } from 'vue';
+import { storeToRefs } from 'pinia';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth.store';
 import { useUiStore } from '../stores/ui.store';
@@ -114,11 +115,13 @@ const router = useRouter();
 const auth = useAuthStore();
 const ui = useUiStore();
 
-const { mobileSidebarOpen, toggleMobileSidebar, closeMobileSidebar } = ui;
+const { mobileSidebarOpen } = storeToRefs(ui);
+const { toggleMobileSidebar, closeMobileSidebar } = ui;
 
 const navItems = computed(() => {
   const items = [
     { path: '/dashboard', label: 'الداشبورد', icon: LayoutDashboard },
+    { path: '/daily-report', label: 'التقرير اليومي', icon: ClipboardList },
     { path: '/financial-movement', label: 'الحركة المالية', icon: Wallet },
     { path: '/pos-machines', label: 'الموازنات', icon: CreditCard },
     { path: '/monthly-summary', label: 'الملخص الشهري', icon: ClipboardList },
@@ -132,7 +135,6 @@ const navItems = computed(() => {
     { path: '/credit-sales', label: 'مبيعات آجل', icon: CreditIcon },
     { path: '/credit-settlement', label: 'تسوية آجل', icon: DollarSign },
     { path: '/cancelled-invoices', label: 'الفواتير الملغية', icon: FileX },
-    { path: '/daily-report', label: 'التقرير اليومي', icon: ClipboardList },
     { path: '/reports', label: 'التقارير', icon: FileText },
   ];
   if (auth.isAdmin) {
