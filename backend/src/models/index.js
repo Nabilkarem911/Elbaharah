@@ -20,6 +20,7 @@ const DeliveryOrder = require('./DeliveryOrder');
 const CancelledInvoice = require('./CancelledInvoice');
 const Setting = require('./Setting');
 const FishWaste = require('./FishWaste');
+const WasteReason = require('./WasteReason');
 
 // Associations
 // User
@@ -95,4 +96,5 @@ module.exports = {
   CancelledInvoice,
   Setting,
   FishWaste,
+  WasteReason,
 };

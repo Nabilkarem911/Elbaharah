@@ -5,7 +5,7 @@ const role = require('../middleware/role.middleware');
 const createCrud = require('../controllers/crud.factory');
 const { Supplier, Purchase, PurchaseItem, FishType, DailySale, PosMachine, PosTransaction,
   ExpenseCategory, Expense, OtherSale, CreditAccount, CreditSale, DeliveryPlatform,
-  SaleChannel, CancelledInvoice, FishInventory, User, Setting, DeliveryOrder, FishWaste } = require('../models');
+  SaleChannel, CancelledInvoice, FishInventory, User, Setting, DeliveryOrder, FishWaste, WasteReason } = require('../models');
 
 // Suppliers
 const supplierCtrl = createCrud(Supplier, 'الدلال');
@@ -181,5 +181,30 @@ router.get('/fish-waste/:id', auth, fishWasteCtrl.getById);
 router.post('/fish-waste', auth, role('admin', 'manager'), fishWasteCtrl.create);
 router.put('/fish-waste/:id', auth, role('admin', 'manager'), fishWasteCtrl.update);
 router.delete('/fish-waste/:id', auth, role('admin', 'manager'), fishWasteCtrl.remove);
+
+// Fish Waste - avg cost for a fish type (current month)
+router.get('/fish-waste/avg-cost/:fishTypeId', auth, async (req, res, next) => {
+  try {
+    const now = new Date();
+    const start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+    const end = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+    const items = await PurchaseItem.findAll({
+      where: { fish_type_id: req.params.fishTypeId },
+      include: [{ model: Purchase, as: 'purchase', where: { purchase_date: { [require('sequelize').Op.between]: [start, end] } }, required: true }],
+    });
+    if (!items.length) return res.json({ avg_cost: 0, count: 0 });
+    const totalWeight = items.reduce((s, i) => s + parseFloat(i.weight), 0);
+    const totalAmount = items.reduce((s, i) => s + parseFloat(i.total_price), 0);
+    const avg = totalWeight > 0 ? totalAmount / totalWeight : 0;
+    res.json({ avg_cost: avg, count: items.length, total_weight: totalWeight, total_amount: totalAmount });
+  } catch (err) { next(err); }
+});
+
+// Waste Reasons
+const wasteReasonCtrl = createCrud(WasteReason, 'سبب الهدر');
+router.get('/waste-reasons', auth, wasteReasonCtrl.list);
+router.post('/waste-reasons', auth, role('admin', 'manager'), wasteReasonCtrl.create);
+router.put('/waste-reasons/:id', auth, role('admin', 'manager'), wasteReasonCtrl.update);
+router.delete('/waste-reasons/:id', auth, role('admin'), wasteReasonCtrl.remove);
 
 module.exports = router;
