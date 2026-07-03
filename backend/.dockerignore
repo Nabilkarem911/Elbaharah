@@ -4,6 +4,3 @@ npm-debug.log
 .env.*
 .git
 .gitignore
-*.md
-config/
-seeders/

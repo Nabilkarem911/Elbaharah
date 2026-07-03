@@ -39,6 +39,10 @@ app.use('/api/auth', authRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api', apiRoutes);
 
+app.use((req, res) => {
+  res.status(404).json({ error: `Route not found: ${req.method} ${req.originalUrl}` });
+});
+
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;
