@@ -8,7 +8,7 @@
       </div>
       <div class="relative z-10 flex flex-col justify-center px-16 text-white">
         <div class="mb-6">
-          <img src="/logo.png" alt="شعار بيت الأسماك" class="w-20 h-20 rounded-2xl object-contain shadow-lg" />
+          <img src="/logo.png" alt="شعار أسماك البحارة" class="w-20 h-20 rounded-2xl object-contain shadow-lg" />
         </div>
         <h1 class="text-4xl font-bold mb-3">أسماك البحارة</h1>
         <p class="text-lg text-primary-200 mb-8 leading-relaxed">
