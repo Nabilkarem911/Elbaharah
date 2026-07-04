@@ -10,7 +10,7 @@
         <div class="mb-6">
           <img src="/logo.png" alt="شعار بيت الأسماك" class="w-20 h-20 rounded-2xl object-contain shadow-lg" />
         </div>
-        <h1 class="text-4xl font-bold mb-3">بيت الأسماك</h1>
+        <h1 class="text-4xl font-bold mb-3">أسماك البحارة</h1>
         <p class="text-lg text-primary-200 mb-8 leading-relaxed">
           نظام إدارة متكامل لمطعم الأسماك — مبيعات، مشتريات، دلالين، مصروفات، تقارير شاملة
         </p>
@@ -31,7 +31,7 @@
         <!-- Mobile logo -->
         <div class="lg:hidden flex flex-col items-center mb-8">
           <img src="/logo.png" alt="شعار" class="w-16 h-16 rounded-2xl object-contain mb-3 shadow-lg" />
-          <h1 class="text-xl font-bold text-primary-500">بيت الأسماك</h1>
+          <h1 class="text-xl font-bold text-primary-500">أسماك البحارة</h1>
         </div>
 
         <div class="card p-8">
