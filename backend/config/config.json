@@ -1,0 +1,20 @@
+{
+  "development": {
+    "username": "elbharah",
+    "password": "elbharah_dev_2026",
+    "database": "elbharah",
+    "host": "127.0.0.1",
+    "port": 5432,
+    "dialect": "postgres",
+    "logging": false
+  },
+  "production": {
+    "username": "elbharah",
+    "password": "elbharah_prod_2026",
+    "database": "elbharah",
+    "host": "postgres",
+    "port": 5432,
+    "dialect": "postgres",
+    "logging": false
+  }
+}

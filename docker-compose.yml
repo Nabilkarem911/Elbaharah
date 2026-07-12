@@ -1,0 +1,51 @@
+services:
+  backend:
+    build: ./backend
+    container_name: elbharah_backend
+    restart: unless-stopped
+    environment:
+      PORT: 3000
+      NODE_ENV: production
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: ${DB_NAME:-elbharah}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-24h}
+      CORS_ORIGIN: ${CORS_ORIGIN:-*}
+    expose:
+      - "3000"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - elbharah_net
+      - dokploy-network
+
+  frontend:
+    build: ./frontend
+    container_name: elbharah_frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    expose:
+      - "80"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:80/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - elbharah_net
+      - dokploy-network
+
+networks:
+  elbharah_net:
+    driver: bridge
+  dokploy-network:
+    external: true

@@ -1,0 +1,43 @@
+# Docker Compose for Dokploy deployment
+# PostgreSQL is managed by Dokploy as a Database service
+# This compose only runs Backend + Frontend
+
+services:
+  backend:
+    build: ./backend
+    container_name: elbharah_backend
+    restart: unless-stopped
+    environment:
+      PORT: 3000
+      NODE_ENV: production
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: ${DB_NAME:-elbharah}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-24h}
+      CORS_ORIGIN: ${CORS_ORIGIN:-*}
+    expose:
+      - "3000"
+    networks:
+      - elbharah_net
+      - dokploy-network
+
+  frontend:
+    build: ./frontend
+    container_name: elbharah_frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    expose:
+      - "80"
+    networks:
+      - elbharah_net
+      - dokploy-network
+
+networks:
+  elbharah_net:
+    driver: bridge
+  dokploy-network:
+    external: true
