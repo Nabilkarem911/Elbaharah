@@ -7,10 +7,14 @@ const ExpenseCategory = sequelize.define('ExpenseCategory', {
     primaryKey: true,
     autoIncrement: true,
   },
+  organization_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: { model: 'organizations', key: 'id' },
+  },
   code: {
     type: DataTypes.INTEGER,
     allowNull: false,
-    unique: true,
   },
   name: {
     type: DataTypes.STRING(100),

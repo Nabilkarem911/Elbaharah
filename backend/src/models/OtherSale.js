@@ -7,6 +7,16 @@ const OtherSale = sequelize.define('OtherSale', {
     primaryKey: true,
     autoIncrement: true,
   },
+  organization_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: { model: 'organizations', key: 'id' },
+  },
+  branch_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: { model: 'branches', key: 'id' },
+  },
   sale_date: {
     type: DataTypes.DATEONLY,
     allowNull: false,

@@ -71,6 +71,15 @@
           <h2 class="font-bold text-primary-500 text-base lg:text-lg">{{ pageTitle }}</h2>
         </div>
         <div class="flex items-center gap-2">
+          <!-- Branch switcher -->
+          <select
+            v-if="branches.length > 1"
+            v-model="currentBranchId"
+            @change="switchBranch"
+            class="px-3 py-1.5 rounded-lg bg-primary-50 text-primary-500 text-sm font-medium border-0 outline-none cursor-pointer"
+          >
+            <option v-for="b in branches" :key="b.id" :value="b.id">{{ b.name }}</option>
+          </select>
           <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-primary-50">
             <Calendar class="w-4 h-4 text-primary-400" />
             <span class="text-sm text-primary-500 font-medium">{{ todayLabel }}</span>
@@ -98,15 +107,17 @@
 </template>
 
 <script setup>
-import { computed, reactive, provide } from 'vue';
+import { computed, reactive, provide, ref, onMounted } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth.store';
 import { useUiStore } from '../stores/ui.store';
+import api from '../api';
 import {
   LayoutDashboard, Wallet, CreditCard, ClipboardList, Fish as FishIcon,
   Users, ShoppingCart, BarChart3, Receipt, FileX, FileText, Settings, User,
   LogOut, Menu, Bell, Calendar, Store, CreditCard as CreditIcon, DollarSign, Trash2,
+  GitBranch,
 } from 'lucide-vue-next';
 import ToastNotification from '../components/ToastNotification.vue';
 
@@ -118,6 +129,26 @@ const ui = useUiStore();
 const { mobileSidebarOpen } = storeToRefs(ui);
 const { toggleMobileSidebar, closeMobileSidebar } = ui;
 
+const orgLabels = ref({});
+const orgName = ref('');
+const branches = ref([]);
+const currentBranchId = ref(auth.user?.branch_id || null);
+
+const fetchOrgInfo = async () => {
+  try {
+    const { data } = await api.get('/me/org');
+    orgLabels.value = data.labels || {};
+    orgName.value = data.organization?.name || '';
+    if (data.organization?.branches) {
+      branches.value = data.organization.branches;
+    }
+  } catch (e) {
+    // ignore — use defaults
+  }
+};
+
+const L = (key, fallback) => orgLabels.value[key] || fallback;
+
 const navItems = computed(() => {
   const items = [
     { path: '/dashboard', label: 'الداشبورد', icon: LayoutDashboard },
@@ -125,11 +156,11 @@ const navItems = computed(() => {
     { path: '/financial-movement', label: 'الحركة المالية', icon: Wallet },
     { path: '/pos-machines', label: 'الموازنات', icon: CreditCard },
     { path: '/monthly-summary', label: 'الملخص الشهري', icon: ClipboardList },
-    { path: '/fish-cost', label: 'تكلفة السمك', icon: FishIcon },
-    { path: '/suppliers', label: 'الدلالين', icon: Users },
+    { path: '/fish-cost', label: L('product_cost', 'تكلفة السمك'), icon: FishIcon },
+    { path: '/suppliers', label: L('suppliers', 'الدلالين'), icon: Users },
     { path: '/purchases', label: 'المشتريات', icon: ShoppingCart },
     { path: '/statistics', label: 'الإحصائيات', icon: BarChart3 },
-    { path: '/fish-waste', label: 'هدر الأسماك', icon: Trash2 },
+    { path: '/fish-waste', label: L('product_waste', 'هدر الأسماك'), icon: Trash2 },
     { path: '/expenses', label: 'المصروفات', icon: Receipt },
     { path: '/other-sales', label: 'مبيعات أخرى', icon: Store },
     { path: '/credit-sales', label: 'مبيعات آجل', icon: CreditIcon },
@@ -148,10 +179,11 @@ const isActive = (path) => route.path === path || route.path.startsWith(path + '
 
 const pageTitle = computed(() => {
   const item = navItems.value.find(i => isActive(i.path));
-  return item?.label || 'بيت الأسماك';
+  return item?.label || orgName.value || 'النظام';
 });
 
 const roleLabel = computed(() => ({
+  super_admin: 'مدير عام',
   admin: 'مدير عام',
   manager: 'محاسب',
   cashier: 'كاشير',
@@ -170,6 +202,14 @@ const logout = () => {
   router.push('/login');
 };
 
+const switchBranch = () => {
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  user.branch_id = currentBranchId.value;
+  localStorage.setItem('user', JSON.stringify(user));
+  auth.user = user;
+  window.location.reload();
+};
+
 // Toast system
 const toast = reactive({ show: false, message: '', type: 'success' });
 const showToast = (message, type = 'success') => {
@@ -179,4 +219,6 @@ const showToast = (message, type = 'success') => {
   setTimeout(() => { toast.show = false; }, 3000);
 };
 provide('toast', showToast);
+
+onMounted(fetchOrgInfo);
 </script>

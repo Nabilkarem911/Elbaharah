@@ -8,8 +8,11 @@ export const useAuthStore = defineStore('auth', {
   }),
   getters: {
     isAuthenticated: (state) => !!state.token,
+    isSuperAdmin: (state) => state.user?.role === 'super_admin',
     isAdmin: (state) => state.user?.role === 'admin',
     isManager: (state) => state.user?.role === 'manager' || state.user?.role === 'admin',
+    organizationId: (state) => state.user?.organization_id || null,
+    branchId: (state) => state.user?.branch_id || null,
   },
   actions: {
     async login(username, password) {

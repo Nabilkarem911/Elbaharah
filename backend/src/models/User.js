@@ -29,9 +29,19 @@ const User = sequelize.define('User', {
     },
   },
   role: {
-    type: DataTypes.ENUM('admin', 'manager', 'cashier', 'accountant'),
+    type: DataTypes.ENUM('super_admin', 'admin', 'manager', 'cashier', 'accountant'),
     allowNull: false,
     defaultValue: 'cashier',
+  },
+  organization_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: { model: 'organizations', key: 'id' },
+  },
+  branch_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: { model: 'branches', key: 'id' },
   },
   is_active: {
     type: DataTypes.BOOLEAN,

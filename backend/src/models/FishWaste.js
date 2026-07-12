@@ -7,6 +7,16 @@ const FishWaste = sequelize.define('FishWaste', {
     primaryKey: true,
     autoIncrement: true,
   },
+  organization_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: { model: 'organizations', key: 'id' },
+  },
+  branch_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: { model: 'branches', key: 'id' },
+  },
   fish_type_id: {
     type: DataTypes.INTEGER,
     allowNull: false,

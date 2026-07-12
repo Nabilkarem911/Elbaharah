@@ -10,9 +10,9 @@
         <div class="mb-6">
           <img src="/logo.png" alt="شعار أسماك البحارة" class="w-20 h-20 rounded-2xl object-contain shadow-lg" />
         </div>
-        <h1 class="text-4xl font-bold mb-3">أسماك البحارة</h1>
+        <h1 class="text-4xl font-bold mb-3">إدارة المنشآت</h1>
         <p class="text-lg text-primary-200 mb-8 leading-relaxed">
-          نظام إدارة متكامل لمطعم الأسماك — مبيعات، مشتريات، دلالين، مصروفات، تقارير شاملة
+          نظام إدارة متكامل — مبيعات، مشتريات، موردين، مصروفات، تقارير شاملة لكل أنواع الأنشطة
         </p>
         <div class="space-y-3">
           <div v-for="feature in features" :key="feature" class="flex items-center gap-3">
@@ -31,7 +31,7 @@
         <!-- Mobile logo -->
         <div class="lg:hidden flex flex-col items-center mb-8">
           <img src="/logo.png" alt="شعار" class="w-16 h-16 rounded-2xl object-contain mb-3 shadow-lg" />
-          <h1 class="text-xl font-bold text-primary-500">أسماك البحارة</h1>
+          <h1 class="text-xl font-bold text-primary-500">إدارة المنشآت</h1>
         </div>
 
         <div class="card p-8">
@@ -99,7 +99,7 @@
 
           <div class="mt-6 pt-6 border-t border-gray-100">
             <p class="text-xs text-gray-400 text-center">
-              بيانات تجريبية — admin / admin123
+              نظام إدارة المنشآت
             </p>
           </div>
         </div>
@@ -136,8 +136,12 @@ const handleLogin = async () => {
   error.value = '';
   loading.value = true;
   try {
-    await auth.login(username.value, password.value);
-    router.push('/dashboard');
+    const data = await auth.login(username.value, password.value);
+    if (data.user.role === 'super_admin') {
+      router.push('/super-admin');
+    } else {
+      router.push('/dashboard');
+    }
   } catch (err) {
     error.value = err.response?.data?.error || 'حدث خطأ — يرجى المحاولة مرة أخرى';
   } finally {

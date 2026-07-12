@@ -7,6 +7,11 @@ const Setting = sequelize.define('Setting', {
     primaryKey: true,
     autoIncrement: true,
   },
+  organization_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: { model: 'organizations', key: 'id' },
+  },
   restaurant_name: {
     type: DataTypes.STRING(100),
     defaultValue: 'بيت الأسماك',

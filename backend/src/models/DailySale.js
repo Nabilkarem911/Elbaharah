@@ -7,10 +7,19 @@ const DailySale = sequelize.define('DailySale', {
     primaryKey: true,
     autoIncrement: true,
   },
+  organization_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: { model: 'organizations', key: 'id' },
+  },
+  branch_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: { model: 'branches', key: 'id' },
+  },
   sale_date: {
     type: DataTypes.DATEONLY,
     allowNull: false,
-    unique: true,
   },
   day_name: {
     type: DataTypes.STRING(10),

@@ -13,6 +13,7 @@ const authRoutes = require('./routes/auth.routes');
 const dashboardRoutes = require('./routes/dashboard.routes');
 const apiRoutes = require('./routes/api.routes');
 const reportsRoutes = require('./routes/reports.routes');
+const superAdminRoutes = require('./routes/superAdmin.routes');
 
 const app = express();
 
@@ -59,6 +60,7 @@ app.get('/api/routes', (req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/super-admin', superAdminRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api', apiRoutes);
 app.use('/api/reports', reportsRoutes);
@@ -88,24 +90,19 @@ async function connectWithRetry(attempt = 1) {
 
     const userCount = await User.count();
     if (userCount === 0) {
-      console.log('🌱 No users found, running seeders...');
-      const seeders = [
-        require('./seeders/01-admin.seeder'),
-        require('./seeders/02-suppliers.seeder'),
-        require('./seeders/03-fishTypes.seeder'),
-        require('./seeders/04-expenseCategories.seeder'),
-        require('./seeders/05-system.seeder'),
-      ];
-      for (const seeder of seeders) {
-        await seeder.up();
-      }
-      console.log('✅ Seeders completed');
+      console.log('🌱 No users found, creating super admin...');
+      await User.create({
+        username: 'superadmin',
+        password_hash: 'superadmin123',
+        full_name: 'المدير العام',
+        role: 'super_admin',
+      });
+      console.log('✅ Super admin created');
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('Login: admin / admin123');
-      console.log('Login: manager / manager123');
+      console.log('Login: superadmin / superadmin123');
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     } else {
-      console.log('✅ Users already exist, skipping seeders');
+      console.log('✅ Users already exist, skipping seed');
     }
   } catch (err) {
     console.error(`❌ DB attempt ${attempt} failed: ${err.message}`);

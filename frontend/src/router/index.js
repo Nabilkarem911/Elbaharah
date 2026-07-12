@@ -9,6 +9,16 @@ const routes = [
     meta: { guest: true },
   },
   {
+    path: '/super-admin',
+    component: () => import('../layouts/SuperAdminLayout.vue'),
+    meta: { auth: true, superAdmin: true },
+    children: [
+      { path: '', redirect: '/super-admin/organizations' },
+      { path: 'organizations', name: 'sa-organizations', component: () => import('../views/super-admin/OrganizationsView.vue') },
+      { path: 'organizations/:id', name: 'sa-organization-detail', component: () => import('../views/super-admin/OrganizationDetailView.vue') },
+    ],
+  },
+  {
     path: '/',
     component: () => import('../layouts/DashboardLayout.vue'),
     meta: { auth: true },
@@ -61,7 +71,14 @@ router.beforeEach((to, from, next) => {
     return next('/login');
   }
   if (to.meta.guest && auth.isAuthenticated) {
+    if (auth.isSuperAdmin) return next('/super-admin');
     return next('/dashboard');
+  }
+  if (to.meta.superAdmin && !auth.isSuperAdmin) {
+    return next('/dashboard');
+  }
+  if (auth.isSuperAdmin && !to.path.startsWith('/super-admin') && !to.path.startsWith('/login')) {
+    return next('/super-admin');
   }
   next();
 });

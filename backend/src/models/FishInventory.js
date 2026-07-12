@@ -7,6 +7,11 @@ const FishInventory = sequelize.define('FishInventory', {
     primaryKey: true,
     autoIncrement: true,
   },
+  organization_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: { model: 'organizations', key: 'id' },
+  },
   fish_type_id: {
     type: DataTypes.INTEGER,
     allowNull: false,

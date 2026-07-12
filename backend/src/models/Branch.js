@@ -1,7 +1,7 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 
-const DeliveryPlatform = sequelize.define('DeliveryPlatform', {
+const Branch = sequelize.define('Branch', {
   id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
@@ -13,24 +13,27 @@ const DeliveryPlatform = sequelize.define('DeliveryPlatform', {
     references: { model: 'organizations', key: 'id' },
   },
   name: {
-    type: DataTypes.STRING(50),
-    allowNull: false,
-    validate: { notEmpty: true },
-  },
-  key: {
-    type: DataTypes.STRING(30),
+    type: DataTypes.STRING(150),
     allowNull: false,
   },
-  icon: {
-    type: DataTypes.STRING(50),
+  phone: {
+    type: DataTypes.STRING(20),
+    allowNull: true,
+  },
+  address: {
+    type: DataTypes.TEXT,
     allowNull: true,
   },
   is_active: {
     type: DataTypes.BOOLEAN,
     defaultValue: true,
   },
+  is_main: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+  },
 }, {
-  tableName: 'delivery_platforms',
+  tableName: 'branches',
 });
 
-module.exports = DeliveryPlatform;
+module.exports = Branch;

@@ -7,10 +7,14 @@ const Supplier = sequelize.define('Supplier', {
     primaryKey: true,
     autoIncrement: true,
   },
+  organization_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: { model: 'organizations', key: 'id' },
+  },
   code: {
     type: DataTypes.STRING(20),
     allowNull: false,
-    unique: true,
   },
   name: {
     type: DataTypes.STRING(100),

@@ -7,10 +7,14 @@ const FishType = sequelize.define('FishType', {
     primaryKey: true,
     autoIncrement: true,
   },
+  organization_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: { model: 'organizations', key: 'id' },
+  },
   name: {
     type: DataTypes.STRING(50),
     allowNull: false,
-    unique: true,
     validate: { notEmpty: true },
   },
   name_en: {

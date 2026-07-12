@@ -7,10 +7,14 @@ const SaleChannel = sequelize.define('SaleChannel', {
     primaryKey: true,
     autoIncrement: true,
   },
+  organization_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: { model: 'organizations', key: 'id' },
+  },
   key: {
     type: DataTypes.STRING(30),
     allowNull: false,
-    unique: true,
   },
   name: {
     type: DataTypes.STRING(50),

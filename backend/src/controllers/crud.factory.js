@@ -6,6 +6,19 @@ function createCrudController(Model, modelName, includeAssoc = []) {
         const offset = (page - 1) * limit;
         const where = {};
         const { Op } = require('sequelize');
+
+        // Auto-filter by organization_id for non-super-admin users
+        if (req.user && req.user.role !== 'super_admin' && req.user.organization_id) {
+          where.organization_id = req.user.organization_id;
+        }
+
+        // Auto-filter by branch_id if user has one
+        if (req.user && req.user.branch_id && Model.rawAttributes.branch_id) {
+          if (!where.branch_id) {
+            where.branch_id = req.user.branch_id;
+          }
+        }
+
         for (const [key, val] of Object.entries(filters)) {
           if (!val && val !== 0) continue;
           if (key === 'page' || key === 'limit') continue;
@@ -40,7 +53,11 @@ function createCrudController(Model, modelName, includeAssoc = []) {
     },
     getById: async (req, res, next) => {
       try {
-        const item = await Model.findByPk(req.params.id, { include: includeAssoc });
+        const where = { id: req.params.id };
+        if (req.user && req.user.role !== 'super_admin' && req.user.organization_id) {
+          where.organization_id = req.user.organization_id;
+        }
+        const item = await Model.findOne({ where, include: includeAssoc });
         if (!item) return res.status(404).json({ error: `${modelName} غير موجود` });
         res.json(item);
       } catch (err) {
@@ -53,6 +70,14 @@ function createCrudController(Model, modelName, includeAssoc = []) {
         if (req.user && req.user.id) {
           data.created_by = req.user.id;
         }
+        // Auto-assign organization_id for non-super-admin users
+        if (req.user && req.user.role !== 'super_admin' && req.user.organization_id && Model.rawAttributes.organization_id) {
+          data.organization_id = req.user.organization_id;
+        }
+        // Auto-assign branch_id if model has it and user has one
+        if (req.user && req.user.branch_id && Model.rawAttributes.branch_id && !data.branch_id) {
+          data.branch_id = req.user.branch_id;
+        }
         const item = await Model.create(data);
         res.status(201).json(item);
       } catch (err) {
@@ -61,7 +86,11 @@ function createCrudController(Model, modelName, includeAssoc = []) {
     },
     update: async (req, res, next) => {
       try {
-        const item = await Model.findByPk(req.params.id);
+        const where = { id: req.params.id };
+        if (req.user && req.user.role !== 'super_admin' && req.user.organization_id && Model.rawAttributes.organization_id) {
+          where.organization_id = req.user.organization_id;
+        }
+        const item = await Model.findOne({ where });
         if (!item) return res.status(404).json({ error: `${modelName} غير موجود` });
         await item.update(req.body);
         res.json(item);
@@ -71,7 +100,11 @@ function createCrudController(Model, modelName, includeAssoc = []) {
     },
     remove: async (req, res, next) => {
       try {
-        const item = await Model.findByPk(req.params.id);
+        const where = { id: req.params.id };
+        if (req.user && req.user.role !== 'super_admin' && req.user.organization_id && Model.rawAttributes.organization_id) {
+          where.organization_id = req.user.organization_id;
+        }
+        const item = await Model.findOne({ where });
         if (!item) return res.status(404).json({ error: `${modelName} غير موجود` });
         await item.destroy();
         res.json({ message: `تم حذف ${modelName} بنجاح` });

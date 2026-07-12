@@ -1,4 +1,6 @@
 const sequelize = require('../config/database');
+const Organization = require('./Organization');
+const Branch = require('./Branch');
 const User = require('./User');
 const Supplier = require('./Supplier');
 const FishType = require('./FishType');
@@ -23,6 +25,15 @@ const FishWaste = require('./FishWaste');
 const WasteReason = require('./WasteReason');
 
 // Associations
+// Organization → Branches
+Organization.hasMany(Branch, { foreignKey: 'organization_id', as: 'branches' });
+Branch.belongsTo(Organization, { foreignKey: 'organization_id', as: 'organization' });
+
+// Organization → Users
+Organization.hasMany(User, { foreignKey: 'organization_id', as: 'users' });
+User.belongsTo(Organization, { foreignKey: 'organization_id', as: 'organization' });
+User.belongsTo(Branch, { foreignKey: 'branch_id', as: 'branch' });
+
 // User
 User.hasMany(Purchase, { foreignKey: 'created_by', as: 'purchases' });
 User.hasMany(DailySale, { foreignKey: 'created_by', as: 'dailySales' });
@@ -75,6 +86,8 @@ CreditSale.belongsTo(CreditAccount, { foreignKey: 'credit_account_id', as: 'acco
 
 module.exports = {
   sequelize,
+  Organization,
+  Branch,
   User,
   Supplier,
   FishType,

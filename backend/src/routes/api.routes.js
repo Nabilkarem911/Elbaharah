@@ -7,7 +7,24 @@ const validate = require('../middleware/validate.middleware');
 const createCrud = require('../controllers/crud.factory');
 const { Supplier, Purchase, PurchaseItem, FishType, DailySale, PosMachine, PosTransaction,
   ExpenseCategory, Expense, OtherSale, CreditAccount, CreditSale, DeliveryPlatform,
-  SaleChannel, CancelledInvoice, FishInventory, User, Setting, DeliveryOrder, FishWaste, WasteReason } = require('../models');
+  SaleChannel, CancelledInvoice, FishInventory, User, Setting, DeliveryOrder, FishWaste, WasteReason,
+  Organization, Branch } = require('../models');
+
+// Get current user's organization + branch info (for frontend labels)
+router.get('/me/org', auth, async (req, res, next) => {
+  try {
+    if (!req.user.organization_id) {
+      return res.json({ organization: null, branch: null, labels: {} });
+    }
+    const org = await Organization.findByPk(req.user.organization_id);
+    const branch = req.user.branch_id ? await Branch.findByPk(req.user.branch_id) : null;
+    res.json({
+      organization: org,
+      branch,
+      labels: org?.labels || {},
+    });
+  } catch (err) { next(err); }
+});
 
 // Suppliers
 const supplierCtrl = createCrud(Supplier, 'الدلال');

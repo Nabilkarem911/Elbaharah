@@ -7,10 +7,19 @@ const Purchase = sequelize.define('Purchase', {
     primaryKey: true,
     autoIncrement: true,
   },
+  organization_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: { model: 'organizations', key: 'id' },
+  },
+  branch_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: { model: 'branches', key: 'id' },
+  },
   invoice_number: {
     type: DataTypes.STRING(50),
     allowNull: false,
-    unique: true,
   },
   supplier_id: {
     type: DataTypes.INTEGER,
