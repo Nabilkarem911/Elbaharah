@@ -83,7 +83,7 @@ async function connectWithRetry(attempt = 1) {
     console.log(`🔄 DB connection attempt ${attempt}...`);
     await sequelize.authenticate();
     console.log('✅ Database connected');
-    const syncOptions = process.env.NODE_ENV === 'production' ? {} : { alter: true };
+    const syncOptions = { alter: true };
     await sequelize.sync(syncOptions);
     console.log('✅ Models synced');
     dbReady = true;
