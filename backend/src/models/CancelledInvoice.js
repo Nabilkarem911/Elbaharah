@@ -9,7 +9,7 @@ const CancelledInvoice = sequelize.define('CancelledInvoice', {
   },
   organization_id: {
     type: DataTypes.INTEGER,
-    allowNull: false,
+    allowNull: true,
     references: { model: 'organizations', key: 'id' },
   },
   branch_id: {
