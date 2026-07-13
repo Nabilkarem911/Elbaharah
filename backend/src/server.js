@@ -20,7 +20,7 @@ const app = express();
 app.use(helmet({ crossOriginResourcePolicy: false }));
 const corsOrigin = process.env.CORS_ORIGIN || (process.env.NODE_ENV === 'production' ? null : '*');
 app.use(cors({
-  origin: corsOrigin || false,
+  origin: corsOrigin === '*' ? true : (corsOrigin || false),
   credentials: true,
 }));
 app.use(express.json({ limit: '10mb' }));
