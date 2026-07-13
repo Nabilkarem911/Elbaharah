@@ -88,9 +88,9 @@ async function connectWithRetry(attempt = 1) {
     console.log('✅ Models synced');
     dbReady = true;
 
-    const userCount = await User.count();
-    if (userCount === 0) {
-      console.log('🌱 No users found, creating super admin...');
+    const superAdmin = await User.findOne({ where: { role: 'super_admin' } });
+    if (!superAdmin) {
+      console.log('🌱 No super admin found, creating one...');
       await User.create({
         username: 'superadmin',
         password_hash: 'superadmin123',
@@ -102,7 +102,7 @@ async function connectWithRetry(attempt = 1) {
       console.log('Login: superadmin / superadmin123');
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     } else {
-      console.log('✅ Users already exist, skipping seed');
+      console.log('✅ Super admin already exists');
     }
   } catch (err) {
     console.error(`❌ DB attempt ${attempt} failed: ${err.message}`);
