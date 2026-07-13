@@ -8,7 +8,7 @@ const createCrud = require('../controllers/crud.factory');
 const { Supplier, Purchase, PurchaseItem, FishType, DailySale, PosMachine, PosTransaction,
   ExpenseCategory, Expense, OtherSale, CreditAccount, CreditSale, DeliveryPlatform,
   SaleChannel, CancelledInvoice, FishInventory, User, Setting, DeliveryOrder, FishWaste, WasteReason,
-  Organization, Branch } = require('../models');
+  Organization, Branch, DailySaleChannel } = require('../models');
 
 // Get current user's organization + branch info (for frontend labels)
 router.get('/me/org', auth, async (req, res, next) => {
