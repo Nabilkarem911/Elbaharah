@@ -336,14 +336,31 @@ const applyCashCounter = (total) => {
   toast('تم حساب الصندوق بنجاح');
 };
 
+const numericFields = [
+  'total_sales', 'other_sales', 'credit_sales', 'custody', 'cash_box',
+  'mada', 'visa', 'mastercard', 'bank_transfer', 'delivery_sales',
+  'delivery_orders_count',
+];
+
 const save = async () => {
   saving.value = true;
   try {
+    const payload = { ...form };
+    for (const key of numericFields) {
+      if (payload[key] === '' || payload[key] === null || payload[key] === undefined) {
+        payload[key] = 0;
+      }
+    }
+    for (const p of deliveryPlatforms.value) {
+      if (payload[p.key] === '' || payload[p.key] === null || payload[p.key] === undefined) {
+        payload[p.key] = 0;
+      }
+    }
     if (editing.value) {
-      await api.put(`/sales/${form.id}`, form);
+      await api.put(`/sales/${form.id}`, payload);
       toast('تم تعديل السجل بنجاح');
     } else {
-      await api.post('/sales', form);
+      await api.post('/sales', payload);
       toast('تم إضافة السجل بنجاح');
     }
     closeModal();
