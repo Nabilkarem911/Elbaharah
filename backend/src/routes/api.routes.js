@@ -180,6 +180,7 @@ router.get('/purchases/invoices', auth, async (req, res, next) => {
       p.items.forEach(item => {
         invoiceMap[invNum].items.push({
           fish_type_id: item.fish_type_id,
+          fish_code: item.fishType ? item.fishType.code : '',
           fish_name: item.fishType ? item.fishType.name : 'غير معروف',
           supplier_id: p.supplier_id,
           supplier_name: p.supplier ? p.supplier.name : 'غير معروف',
@@ -224,6 +225,7 @@ router.get('/purchases/invoice/:id', auth, async (req, res, next) => {
       p.items.forEach(item => {
         allItems.push({
           fish_type_id: item.fish_type_id,
+          fish_code: item.fishType ? item.fishType.code : '',
           fish_name: item.fishType ? item.fishType.name : 'غير معروف',
           supplier_id: p.supplier_id,
           supplier_name: p.supplier ? p.supplier.name : 'غير معروف',

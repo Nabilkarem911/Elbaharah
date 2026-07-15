@@ -12,6 +12,10 @@ const FishType = sequelize.define('FishType', {
     allowNull: true,
     references: { model: 'organizations', key: 'id' },
   },
+  code: {
+    type: DataTypes.STRING(20),
+    allowNull: true,
+  },
   name: {
     type: DataTypes.STRING(50),
     allowNull: false,

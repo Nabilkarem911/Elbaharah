@@ -17,7 +17,8 @@
 
     <!-- Fish Types -->
     <div v-if="activeTab === 'fish'" class="space-y-4">
-      <div class="flex items-center gap-3">
+      <div class="flex flex-wrap items-center gap-3">
+        <input v-model="fishForm.code" class="input max-w-[100px]" placeholder="الرمز" type="number" />
         <input v-model="fishForm.name" class="input max-w-xs" placeholder="اسم النوع" />
         <input v-model="fishForm.name_en" class="input max-w-xs" placeholder="الاسم الإنجليزي" />
         <button @click="saveFish" class="btn-gold"><Plus class="w-4 h-4" /> إضافة</button>
@@ -27,6 +28,7 @@
           <span :class="value ? 'badge-success' : 'badge-danger'">{{ value ? 'نشط' : 'موقوف' }}</span>
         </template>
         <template #actions="{ row }">
+          <button @click="editFishCode(row)" class="p-1.5 rounded-lg hover:bg-primary-50 text-primary-400"><Pencil class="w-4 h-4" /></button>
           <button @click="toggleActive(row, 'fish-types')" class="p-1.5 rounded-lg hover:bg-primary-50 text-primary-400"><Power class="w-4 h-4" /></button>
           <button @click="deleteItem(row, 'fish-types')" class="p-1.5 rounded-lg hover:bg-red-50 text-red-400"><Trash2 class="w-4 h-4" /></button>
         </template>
@@ -153,7 +155,7 @@ const expenseCategories = ref([]);
 const saleChannels = ref([]);
 const settings = reactive({ restaurant_name: '', phone: '', tax_rate: 15, currency: 'SAR', address: '' });
 
-const fishForm = reactive({ name: '', name_en: '' });
+const fishForm = reactive({ code: '', name: '', name_en: '' });
 const posForm = reactive({ machine_number: '', terminal_id: '', bank: '' });
 const editingPos = ref(false);
 const editingPosId = ref(null);
@@ -163,6 +165,7 @@ const expForm = reactive({ code: '', name: '' });
 const chForm = reactive({ key: '', name: '', type: 'cash' });
 
 const fishColumns = [
+  { key: 'code', label: 'الرمز', sortable: true },
   { key: 'name', label: 'الاسم', sortable: true },
   { key: 'name_en', label: 'الإنجليزي' },
   { key: 'is_active', label: 'الحالة' },
@@ -214,8 +217,19 @@ const loadAll = async () => {
 
 const saveFish = async () => {
   if (!fishForm.name) return;
-  try { await api.post('/fish-types', fishForm); toast('تم الإضافة'); fishForm.name = ''; fishForm.name_en = ''; loadAll(); }
+  try { await api.post('/fish-types', fishForm); toast('تم الإضافة'); Object.assign(fishForm, { code: '', name: '', name_en: '' }); loadAll(); }
   catch (err) { toast(err.response?.data?.error || 'فشل', 'error'); }
+};
+const editFishCode = async (row) => {
+  const newCode = prompt(`تعديل رمز السمك: ${row.name}`, row.code || '');
+  if (newCode === null) return;
+  try {
+    await api.put(`/fish-types/${row.id}`, { code: newCode });
+    toast('تم تعديل الرمز');
+    loadAll();
+  } catch (err) {
+    toast(err.response?.data?.error || 'فشل', 'error');
+  }
 };
 const savePos = async () => {
   if (!posForm.machine_number) return;

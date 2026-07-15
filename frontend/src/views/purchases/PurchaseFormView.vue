@@ -58,7 +58,7 @@
                   v-model="row.supplierCode"
                   type="text"
                   class="input !py-1.5 text-sm tabular-nums w-20"
-                  placeholder="1"
+                  placeholder="كود"
                   @input="onSupplierCodeInput(idx)"
                   @keydown.enter="focusCell(idx, 'fishCode')"
                 />
@@ -72,7 +72,7 @@
                   v-model="row.fishCode"
                   type="text"
                   class="input !py-1.5 text-sm tabular-nums w-20"
-                  placeholder="1"
+                  placeholder="كود"
                   @input="onFishCodeInput(idx)"
                   @keydown.enter="focusCell(idx, 'weight')"
                 />
@@ -181,7 +181,7 @@ const supplierMap = computed(() => {
 
 const fishMap = computed(() => {
   const m = {};
-  fishTypes.value.forEach(f => { m[String(f.id)] = f; });
+  fishTypes.value.forEach(f => { m[String(f.code)] = f; });
   return m;
 });
 
@@ -351,7 +351,7 @@ const loadData = async () => {
         supplierCode: String(item.supplier_code || ''),
         supplierId: item.supplier_id,
         supplierName: item.supplier_name || '',
-        fishCode: String(item.fish_type_id || ''),
+        fishCode: String(item.fish_code || ''),
         fishTypeId: item.fish_type_id,
         fishName: item.fish_name || '',
         weight: Number(item.weight),
