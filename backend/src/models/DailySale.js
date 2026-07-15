@@ -41,6 +41,10 @@ const DailySale = sequelize.define('DailySale', {
     type: DataTypes.DECIMAL(12, 2),
     defaultValue: 0,
   },
+  custody: {
+    type: DataTypes.DECIMAL(12, 2),
+    defaultValue: 0,
+  },
   app_elbharah: {
     type: DataTypes.DECIMAL(12, 2),
     defaultValue: 0,

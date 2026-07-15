@@ -253,7 +253,7 @@ exports.dailyReport = async (req, res, next) => {
     // Helper: aggregate a daily sale row
     const emptySale = {
       total_sales: 0, app_elbharah: 0, hunger_station: 0, keta: 0, toyo: 0,
-      other_sales: 0, credit_sales: 0, cash_box: 0, network_sales: 0,
+      other_sales: 0, credit_sales: 0, cash_box: 0, custody: 0, network_sales: 0,
       net_sales: 0, surplus_deficit: 0, mada: 0, visa: 0, mastercard: 0, bank_transfer: 0,
     };
 

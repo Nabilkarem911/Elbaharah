@@ -61,20 +61,50 @@
         </div>
         <div>
           <label class="label">إجمالي المبيعات</label>
-          <input type="number" step="0.01" v-model="form.total_sales" class="input tabular-nums" />
+          <input
+            type="number" step="0.01" v-model="form.total_sales"
+            class="input tabular-nums"
+            @keydown.enter="focusNext($event, 'custody')"
+            data-field="total_sales"
+          />
         </div>
         <div>
           <label class="label">مبيعات أخرى</label>
-          <input type="number" step="0.01" v-model="form.other_sales" class="input tabular-nums" />
+          <input
+            type="number" step="0.01" v-model="form.other_sales"
+            class="input tabular-nums"
+            @keydown.enter="focusNext($event, 'credit_sales')"
+            data-field="other_sales"
+          />
         </div>
         <div>
           <label class="label">مبيعات آجل</label>
-          <input type="number" step="0.01" v-model="form.credit_sales" class="input tabular-nums" />
+          <input
+            type="number" step="0.01" v-model="form.credit_sales"
+            class="input tabular-nums"
+            @keydown.enter="focusNext($event, 'custody')"
+            data-field="credit_sales"
+          />
+        </div>
+        <div>
+          <label class="label">العهدة (غير محسوبة)</label>
+          <input
+            type="number" step="0.01" v-model="form.custody"
+            class="input tabular-nums bg-amber-50"
+            @keydown.enter="focusNext($event, 'cash_box')"
+            data-field="custody"
+            placeholder="1500"
+          />
         </div>
         <div>
           <label class="label">الصندوق</label>
           <div class="flex gap-2">
-            <input type="number" step="0.01" v-model="form.cash_box" class="input tabular-nums" />
+            <input
+              type="number" step="0.01" v-model="form.cash_box"
+              class="input tabular-nums"
+              @keydown.enter="focusNext($event, 'mada')"
+              data-field="cash_box"
+            />
             <button type="button" @click="showCashCounter = true" class="btn-outline !px-3 flex-shrink-0" title="عداد الكاش">
               <Calculator class="w-4 h-4" />
             </button>
@@ -86,19 +116,39 @@
         </div>
         <div>
           <label class="label">مدى</label>
-          <input type="number" step="0.01" v-model="form.mada" class="input tabular-nums" />
+          <input
+            type="number" step="0.01" v-model="form.mada"
+            class="input tabular-nums"
+            @keydown.enter="focusNext($event, 'visa')"
+            data-field="mada"
+          />
         </div>
         <div>
           <label class="label">فيزا</label>
-          <input type="number" step="0.01" v-model="form.visa" class="input tabular-nums" />
+          <input
+            type="number" step="0.01" v-model="form.visa"
+            class="input tabular-nums"
+            @keydown.enter="focusNext($event, 'mastercard')"
+            data-field="visa"
+          />
         </div>
         <div>
           <label class="label">ماستر كارد</label>
-          <input type="number" step="0.01" v-model="form.mastercard" class="input tabular-nums" />
+          <input
+            type="number" step="0.01" v-model="form.mastercard"
+            class="input tabular-nums"
+            @keydown.enter="focusNext($event, 'bank_transfer')"
+            data-field="mastercard"
+          />
         </div>
         <div>
           <label class="label">تحويل بنكي</label>
-          <input type="number" step="0.01" v-model="form.bank_transfer" class="input tabular-nums" />
+          <input
+            type="number" step="0.01" v-model="form.bank_transfer"
+            class="input tabular-nums"
+            @keydown.enter="focusNext($event, 'delivery_sales')"
+            data-field="bank_transfer"
+          />
         </div>
         <div>
           <label class="label">مبيعات التوصيل</label>
@@ -170,6 +220,7 @@ const columns = computed(() => {
     { key: 'other_sales', label: 'مبيعات أخرى', type: 'currency' },
     { key: 'credit_sales', label: 'آجل', type: 'currency' },
     { key: 'cash_box', label: 'الصندوق', type: 'currency' },
+    { key: 'custody', label: 'العهدة', type: 'currency' },
   ];
   for (const p of deliveryPlatforms.value) {
     base.push({ key: p.key, label: p.name, type: 'currency' });
@@ -205,6 +256,7 @@ const emptyForm = () => {
   const f = {
     sale_date: new Date().toISOString().split('T')[0],
     total_sales: 0, other_sales: 0, credit_sales: 0,
+    custody: 1500,
     cash_box: 0, mada: 0, visa: 0, mastercard: 0, bank_transfer: 0,
     delivery_sales: 0, delivery_orders_count: 0, notes: '',
   };
@@ -249,6 +301,21 @@ const loadDeliveryPlatforms = async () => {
 };
 
 const onPageChange = (p) => { page.value = p; loadData(); };
+
+const focusNext = (e, nextField) => {
+  e.preventDefault();
+  const modal = e.target.closest('.modal-content, .fixed');
+  const allInputs = modal
+    ? modal.querySelectorAll('input[data-field], select[data-field]')
+    : document.querySelectorAll('input[data-field], select[data-field]');
+  const idx = Array.from(allInputs).findIndex(el => el === e.target);
+  if (idx >= 0 && idx < allInputs.length - 1) {
+    allInputs[idx + 1].focus();
+  } else if (nextField) {
+    const next = document.querySelector(`[data-field="${nextField}"]`);
+    if (next) next.focus();
+  }
+};
 
 const openModal = (row = null) => {
   if (row) {

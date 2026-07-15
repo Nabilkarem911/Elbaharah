@@ -8,7 +8,7 @@ const createCrud = require('../controllers/crud.factory');
 const { Supplier, Purchase, PurchaseItem, FishType, DailySale, PosMachine, PosTransaction,
   ExpenseCategory, Expense, OtherSale, CreditAccount, CreditSale, DeliveryPlatform,
   SaleChannel, CancelledInvoice, FishInventory, User, Setting, DeliveryOrder, FishWaste, WasteReason,
-  Organization, Branch, DailySaleChannel } = require('../models');
+  Organization, Branch, DailySaleChannel, PurchaseCustody } = require('../models');
 
 // Get current user's organization + branch info (for frontend labels)
 router.get('/me/org', auth, async (req, res, next) => {
@@ -94,6 +94,55 @@ router.put('/purchases/:id', auth, role('admin', 'manager'), [
   } catch (err) { next(err); }
 });
 router.delete('/purchases/:id', auth, role('admin'), purchaseCtrl.remove);
+
+// Get next invoice number for purchases
+router.get('/purchases/next-invoice', auth, async (req, res, next) => {
+  try {
+    const { Op } = require('sequelize');
+    const lastPurchase = await Purchase.findOne({
+      where: { invoice_number: { [Op.like]: 'PUR-%' } },
+      order: [['id', 'DESC']],
+    });
+    let nextNum = 1;
+    if (lastPurchase && lastPurchase.invoice_number) {
+      const match = lastPurchase.invoice_number.match(/PUR-(\d+)/);
+      if (match) nextNum = parseInt(match[1]) + 1;
+    }
+    res.json({ invoice_number: `PUR-${String(nextNum).padStart(4, '0')}` });
+  } catch (err) { next(err); }
+});
+
+// Batch purchases — multiple rows in one request, each row = separate purchase with same invoice
+router.post('/purchases/batch', auth, role('admin', 'manager'), async (req, res, next) => {
+  try {
+    const { rows, purchase_date, invoice_number, payment_method, notes } = req.body;
+    if (!rows || !Array.isArray(rows) || !rows.length) {
+      return res.status(400).json({ error: 'يجب إضافة صف واحد على الأقل' });
+    }
+    const results = [];
+    for (const row of rows) {
+      if (!row.supplier_id || !row.items || !row.items.length) continue;
+      const purchase = await Purchase.create({
+        invoice_number,
+        supplier_id: row.supplier_id,
+        purchase_date: purchase_date || new Date().toISOString().split('T')[0],
+        payment_method: payment_method || 'cash',
+        notes: notes || '',
+        created_by: req.user.id,
+        total_weight: row.items.reduce((s, i) => s + parseFloat(i.weight || 0), 0),
+        total_amount: row.items.reduce((s, i) => s + parseFloat(i.total_price || 0), 0),
+      });
+      for (const item of row.items) {
+        await PurchaseItem.create({
+          ...item,
+          purchase_id: purchase.id,
+        });
+      }
+      results.push(purchase);
+    }
+    res.status(201).json({ created: results.length, purchases: results });
+  } catch (err) { next(err); }
+});
 
 // Daily Sales
 const saleCtrl = createCrud(DailySale, 'الحركة المالية');
@@ -298,5 +347,127 @@ router.get('/waste-reasons', auth, wasteReasonCtrl.list);
 router.post('/waste-reasons', auth, role('admin', 'manager'), wasteReasonCtrl.create);
 router.put('/waste-reasons/:id', auth, role('admin', 'manager'), wasteReasonCtrl.update);
 router.delete('/waste-reasons/:id', auth, role('admin'), wasteReasonCtrl.remove);
+
+// Purchase Custody (عهدة مشتريات)
+
+// Fish Inventory — Opening Balance + Monthly Closing
+router.get('/fish-inventory', auth, async (req, res, next) => {
+  try {
+    const { Op } = require('sequelize');
+    const where = {};
+    if (req.query.month) {
+      where.month_year = req.query.month;
+    }
+    const records = await FishInventory.findAll({
+      where,
+      include: [{ model: FishType, as: 'fishType' }],
+      order: [['month_year', 'DESC'], ['fish_type_id', 'ASC']],
+    });
+    res.json({ data: records });
+  } catch (err) { next(err); }
+});
+
+router.post('/fish-inventory/opening', auth, role('admin', 'manager'), async (req, res, next) => {
+  try {
+    const { month_year, items } = req.body;
+    if (!month_year || !items || !Array.isArray(items) || !items.length) {
+      return res.status(400).json({ error: 'البيانات غير مكتملة' });
+    }
+    const results = [];
+    for (const item of items) {
+      if (!item.fish_type_id) continue;
+      const [record, created] = await FishInventory.findOrCreate({
+        where: { fish_type_id: item.fish_type_id, month_year },
+        defaults: {
+          fish_type_id: item.fish_type_id,
+          month_year,
+          opening_balance_kg: Number(item.opening_balance_kg || 0),
+          opening_balance_cost: Number(item.opening_balance_cost || 0),
+          opening_balance_value: Number(item.opening_balance_value || 0),
+        },
+      });
+      if (!created) {
+        await record.update({
+          opening_balance_kg: Number(item.opening_balance_kg || 0),
+          opening_balance_cost: Number(item.opening_balance_cost || 0),
+          opening_balance_value: Number(item.opening_balance_value || 0),
+        });
+      }
+      results.push(record);
+    }
+    res.status(201).json({ saved: results.length });
+  } catch (err) { next(err); }
+});
+
+router.post('/fish-inventory/closing', auth, role('admin', 'manager'), async (req, res, next) => {
+  try {
+    const { month_year, items } = req.body;
+    if (!month_year || !items || !Array.isArray(items) || !items.length) {
+      return res.status(400).json({ error: 'البيانات غير مكتملة' });
+    }
+    const results = [];
+    for (const item of items) {
+      if (!item.fish_type_id) continue;
+      const [record, created] = await FishInventory.findOrCreate({
+        where: { fish_type_id: item.fish_type_id, month_year },
+        defaults: {
+          fish_type_id: item.fish_type_id,
+          month_year,
+          closing_balance_kg: Number(item.closing_balance_kg || 0),
+          closing_balance_cost: Number(item.closing_balance_cost || 0),
+        },
+      });
+      if (!created) {
+        await record.update({
+          closing_balance_kg: Number(item.closing_balance_kg || 0),
+          closing_balance_cost: Number(item.closing_balance_cost || 0),
+        });
+      }
+      results.push(record);
+    }
+    res.status(201).json({ saved: results.length });
+  } catch (err) { next(err); }
+});
+
+// Purchase Custody (عهدة مشتريات)
+router.get('/purchase-custody', auth, async (req, res, next) => {
+  try {
+    const { Op } = require('sequelize');
+    const where = {};
+    if (req.query.startDate && req.query.endDate) {
+      where.transaction_date = { [Op.between]: [req.query.startDate, req.query.endDate] };
+    }
+    const records = await PurchaseCustody.findAll({
+      where,
+      order: [['transaction_date', 'DESC'], ['id', 'DESC']],
+    });
+    const last = records[0];
+    const currentBalance = last ? parseFloat(last.balance_after) : 0;
+    res.json({ data: records, currentBalance });
+  } catch (err) { next(err); }
+});
+
+router.post('/purchase-custody', auth, role('admin', 'manager'), [
+  body('type').isIn(['feed', 'spend']).withMessage('النوع مطلوب'),
+  body('amount').isFloat({ min: 0.01 }).withMessage('المبلغ مطلوب'),
+  body('transaction_date').notEmpty().withMessage('التاريخ مطلوب'),
+], validate, async (req, res, next) => {
+  try {
+    const record = await PurchaseCustody.create({
+      ...req.body,
+      created_by: req.user.id,
+    });
+    res.status(201).json(record);
+  } catch (err) { next(err); }
+});
+
+router.delete('/purchase-custody/:id', auth, role('admin', 'manager'), async (req, res, next) => {
+  try {
+    const record = await PurchaseCustody.findByPk(req.params.id);
+    if (!record) return res.status(404).json({ error: 'السجل غير موجود' });
+    await record.destroy();
+    res.json({ message: 'تم الحذف' });
+  } catch (err) { next(err); }
+});
 
 module.exports = router;

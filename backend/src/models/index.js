@@ -23,6 +23,7 @@ const CancelledInvoice = require('./CancelledInvoice');
 const Setting = require('./Setting');
 const FishWaste = require('./FishWaste');
 const WasteReason = require('./WasteReason');
+const PurchaseCustody = require('./PurchaseCustody');
 
 // Associations
 // Organization → Branches
@@ -110,4 +111,5 @@ module.exports = {
   Setting,
   FishWaste,
   WasteReason,
+  PurchaseCustody,
 };

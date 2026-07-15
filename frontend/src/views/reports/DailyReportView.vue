@@ -28,6 +28,7 @@
                 <th class="px-3 py-2.5 text-right font-medium text-gray-500 whitespace-nowrap">مبيعات أخرى</th>
                 <th class="px-3 py-2.5 text-right font-medium text-gray-500 whitespace-nowrap">مبيعات الآجل</th>
                 <th class="px-3 py-2.5 text-right font-medium text-gray-500 whitespace-nowrap">الفواتير الملغاة</th>
+                <th class="px-3 py-2.5 text-right font-medium text-gray-500 whitespace-nowrap">العهدة</th>
                 <th class="px-3 py-2.5 text-right font-medium text-gray-500 whitespace-nowrap">الصندوق</th>
                 <th class="px-3 py-2.5 text-right font-medium text-gray-500 whitespace-nowrap">مبيعات الشبكة</th>
                 <th class="px-3 py-2.5 text-right font-bold text-primary-500 whitespace-nowrap">إجمالي المبيعات</th>
@@ -47,6 +48,7 @@
                 <td class="px-3 py-2.5 tabular-nums">{{ fmt(p.sales.other_sales_total) }}</td>
                 <td class="px-3 py-2.5 tabular-nums">{{ fmt(p.sales.credit_sales) }}</td>
                 <td class="px-3 py-2.5 tabular-nums text-red-500">{{ fmt(p.sales.cancelled) }}</td>
+                <td class="px-3 py-2.5 tabular-nums text-amber-600">{{ fmt(p.sales.custody) }}</td>
                 <td class="px-3 py-2.5 tabular-nums font-medium">{{ fmt(p.sales.cash_box) }}</td>
                 <td class="px-3 py-2.5 tabular-nums">{{ fmt(p.sales.network_sales) }}</td>
                 <td class="px-3 py-2.5 tabular-nums font-bold text-primary-500">{{ fmt(p.sales.net_sales) }}</td>
