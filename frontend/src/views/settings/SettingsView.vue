@@ -21,14 +21,16 @@
         <input v-model="fishForm.code" class="input max-w-[100px]" placeholder="الرمز" type="number" />
         <input v-model="fishForm.name" class="input max-w-xs" placeholder="اسم النوع" />
         <input v-model="fishForm.name_en" class="input max-w-xs" placeholder="الاسم الإنجليزي" />
-        <button @click="saveFish" class="btn-gold"><Plus class="w-4 h-4" /> إضافة</button>
+        <button v-if="!editingFish" @click="saveFish" class="btn-gold"><Plus class="w-4 h-4" /> إضافة</button>
+        <button v-else @click="updateFish" class="btn-gold"><Loader2 v-if="savingFish" class="w-4 h-4 animate-spin" /> حفظ التعديل</button>
+        <button v-if="editingFish" @click="cancelEditFish" class="btn-ghost">إلغاء</button>
       </div>
       <DataTable :data="fishTypes" :columns="fishColumns">
         <template #cell-is_active="{ value }">
           <span :class="value ? 'badge-success' : 'badge-danger'">{{ value ? 'نشط' : 'موقوف' }}</span>
         </template>
         <template #actions="{ row }">
-          <button @click="editFishCode(row)" class="p-1.5 rounded-lg hover:bg-primary-50 text-primary-400"><Pencil class="w-4 h-4" /></button>
+          <button @click="editFish(row)" class="p-1.5 rounded-lg hover:bg-primary-50 text-primary-400"><Pencil class="w-4 h-4" /></button>
           <button @click="toggleActive(row, 'fish-types')" class="p-1.5 rounded-lg hover:bg-primary-50 text-primary-400"><Power class="w-4 h-4" /></button>
           <button @click="deleteItem(row, 'fish-types')" class="p-1.5 rounded-lg hover:bg-red-50 text-red-400"><Trash2 class="w-4 h-4" /></button>
         </template>
@@ -156,6 +158,9 @@ const saleChannels = ref([]);
 const settings = reactive({ restaurant_name: '', phone: '', tax_rate: 15, currency: 'SAR', address: '' });
 
 const fishForm = reactive({ code: '', name: '', name_en: '' });
+const editingFish = ref(false);
+const editingFishId = ref(null);
+const savingFish = ref(false);
 const posForm = reactive({ machine_number: '', terminal_id: '', bank: '' });
 const editingPos = ref(false);
 const editingPosId = ref(null);
@@ -220,15 +225,28 @@ const saveFish = async () => {
   try { await api.post('/fish-types', fishForm); toast('تم الإضافة'); Object.assign(fishForm, { code: '', name: '', name_en: '' }); loadAll(); }
   catch (err) { toast(err.response?.data?.error || 'فشل', 'error'); }
 };
-const editFishCode = async (row) => {
-  const newCode = prompt(`تعديل رمز السمك: ${row.name}`, row.code || '');
-  if (newCode === null) return;
+const editFish = (row) => {
+  editingFish.value = true;
+  editingFishId.value = row.id;
+  Object.assign(fishForm, { code: row.code || '', name: row.name, name_en: row.name_en || '' });
+};
+const cancelEditFish = () => {
+  editingFish.value = false;
+  editingFishId.value = null;
+  Object.assign(fishForm, { code: '', name: '', name_en: '' });
+};
+const updateFish = async () => {
+  if (!fishForm.name) return;
+  savingFish.value = true;
   try {
-    await api.put(`/fish-types/${row.id}`, { code: newCode });
-    toast('تم تعديل الرمز');
+    await api.put(`/fish-types/${editingFishId.value}`, fishForm);
+    toast('تم تعديل النوع');
+    cancelEditFish();
     loadAll();
   } catch (err) {
     toast(err.response?.data?.error || 'فشل', 'error');
+  } finally {
+    savingFish.value = false;
   }
 };
 const savePos = async () => {
