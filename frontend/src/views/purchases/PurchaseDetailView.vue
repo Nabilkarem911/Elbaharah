@@ -32,42 +32,73 @@
         </div>
       </div>
 
-      <!-- Items grouped by supplier -->
-      <div v-for="group in groupedItems" :key="group.supplierName" class="card overflow-hidden">
-        <div class="bg-gray-50 px-4 py-3 flex items-center justify-between">
-          <h3 class="font-bold text-gray-700 flex items-center gap-2">
-            <Users class="w-4 h-4" />
-            {{ group.supplierName }}
-          </h3>
-          <span class="text-sm text-gray-500 tabular-nums">{{ group.items.length }} قلم — {{ group.total.toLocaleString('en-US', { minimumFractionDigits: 2 }) }} ر.س</span>
+      <!-- Aggregated summary by supplier (clickable to expand) -->
+      <div class="card overflow-hidden">
+        <div class="bg-gray-50 px-5 py-3 border-b">
+          <h3 class="font-bold text-gray-700">تجميع بال مورد</h3>
+          <p class="text-xs text-gray-400 mt-0.5">اضغط على أي مورد لعرض تفاصيل الأقلام</p>
         </div>
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm">
-            <thead>
-              <tr class="bg-gray-50 border-b">
-                <th class="px-4 py-2.5 text-right font-medium text-gray-500">#</th>
-                <th class="px-4 py-2.5 text-right font-medium text-gray-500">نوع السمك</th>
-                <th class="px-4 py-2.5 text-right font-medium text-gray-500">الوزن (كجم)</th>
-                <th class="px-4 py-2.5 text-right font-medium text-gray-500">سعر الكيلو</th>
-                <th class="px-4 py-2.5 text-right font-medium text-gray-500">الإجمالي</th>
-                <th class="px-4 py-2.5 text-right font-medium text-gray-500">تالف</th>
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="bg-gray-50 border-b">
+              <th class="px-4 py-2.5 text-right font-medium text-gray-500">المورد</th>
+              <th class="px-4 py-2.5 text-right font-medium text-gray-500">الأقلام</th>
+              <th class="px-4 py-2.5 text-right font-medium text-gray-500">الوزن</th>
+              <th class="px-4 py-2.5 text-right font-medium text-gray-500">المبلغ</th>
+              <th class="px-4 py-2.5 text-center font-medium text-gray-500 w-8"></th>
+            </tr>
+          </thead>
+          <tbody class="divide-y">
+            <template v-for="(group, gi) in groupedItems" :key="group.supplierName">
+              <tr
+                class="cursor-pointer hover:bg-primary-50/30 transition-colors"
+                :class="expandedGroups.has(gi) ? 'bg-primary-50/40' : ''"
+                @click="toggleGroup(gi)"
+              >
+                <td class="px-4 py-3 font-bold text-gray-700 flex items-center gap-2">
+                  <ChevronDown v-if="expandedGroups.has(gi)" class="w-4 h-4 text-primary-400" />
+                  <ChevronLeft v-else class="w-4 h-4 text-gray-400" />
+                  <Users class="w-4 h-4 text-gray-400" />
+                  {{ group.supplierName }}
+                </td>
+                <td class="px-4 py-3 tabular-nums text-gray-600">{{ group.items.length }} قلم</td>
+                <td class="px-4 py-3 tabular-nums text-gray-600">{{ group.weight.toFixed(3) }} كجم</td>
+                <td class="px-4 py-3 tabular-nums font-bold text-primary-500">{{ group.total.toLocaleString('en-US', { minimumFractionDigits: 2 }) }} ر.س</td>
+                <td class="px-4 py-3 text-center text-gray-400 text-xs">{{ expandedGroups.has(gi) ? 'إغلاق' : 'تفاصيل' }}</td>
               </tr>
-            </thead>
-            <tbody class="divide-y">
-              <tr v-for="(item, i) in group.items" :key="i" class="hover:bg-gray-50/30">
-                <td class="px-4 py-2.5 text-center text-gray-400">{{ i + 1 }}</td>
-                <td class="px-4 py-2.5 font-medium text-gray-700">{{ item.fish_name || '—' }}</td>
-                <td class="px-4 py-2.5 tabular-nums">{{ Number(item.weight).toFixed(3) }}</td>
-                <td class="px-4 py-2.5 tabular-nums">{{ Number(item.price_per_kilo).toFixed(2) }}</td>
-                <td class="px-4 py-2.5 tabular-nums font-bold text-primary-500">{{ Number(item.total_price).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</td>
-                <td class="px-4 py-2.5">
-                  <span v-if="item.is_damaged" class="badge-danger">تالف ({{ Number(item.damaged_weight || 0).toFixed(3) }})</span>
-                  <span v-else class="badge-success">سليم</span>
+              <!-- Expanded details -->
+              <tr v-if="expandedGroups.has(gi)">
+                <td colspan="5" class="px-4 py-3 bg-gray-50/50">
+                  <table class="w-full text-sm border rounded-lg overflow-hidden">
+                    <thead>
+                      <tr class="bg-white border-b">
+                        <th class="px-3 py-2 text-right font-medium text-gray-500 w-8">#</th>
+                        <th class="px-3 py-2 text-right font-medium text-gray-500">نوع السمك</th>
+                        <th class="px-3 py-2 text-right font-medium text-gray-500">الوزن (كجم)</th>
+                        <th class="px-3 py-2 text-right font-medium text-gray-500">سعر الكيلو</th>
+                        <th class="px-3 py-2 text-right font-medium text-gray-500">الإجمالي</th>
+                        <th class="px-3 py-2 text-right font-medium text-gray-500">تالف</th>
+                      </tr>
+                    </thead>
+                    <tbody class="divide-y">
+                      <tr v-for="(item, i) in group.items" :key="i" class="hover:bg-white">
+                        <td class="px-3 py-2 text-center text-gray-400">{{ i + 1 }}</td>
+                        <td class="px-3 py-2 font-medium text-gray-700">{{ item.fish_name || '—' }}</td>
+                        <td class="px-3 py-2 tabular-nums">{{ Number(item.weight).toFixed(3) }}</td>
+                        <td class="px-3 py-2 tabular-nums">{{ Number(item.price_per_kilo).toFixed(2) }}</td>
+                        <td class="px-3 py-2 tabular-nums font-bold text-primary-500">{{ Number(item.total_price).toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</td>
+                        <td class="px-3 py-2">
+                          <span v-if="item.is_damaged" class="badge-danger">تالف ({{ Number(item.damaged_weight || 0).toFixed(3) }})</span>
+                          <span v-else class="badge-success">سليم</span>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
                 </td>
               </tr>
-            </tbody>
-          </table>
-        </div>
+            </template>
+          </tbody>
+        </table>
       </div>
 
       <!-- Grand total -->
@@ -89,7 +120,7 @@
 <script setup>
 import { ref, computed, inject, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
-import { ArrowRight, Printer, Pencil, Users } from 'lucide-vue-next';
+import { ArrowRight, Printer, Pencil, Users, ChevronDown, ChevronLeft } from 'lucide-vue-next';
 import api from '../../api';
 
 const toast = inject('toast');
@@ -103,14 +134,26 @@ const paymentLabel = computed(() => paymentLabels[invoice.value?.payment_method]
 const totalWeight = computed(() => (invoice.value?.items || []).reduce((s, i) => s + Number(i.weight), 0));
 const totalAmount = computed(() => (invoice.value?.items || []).reduce((s, i) => s + Number(i.total_price), 0));
 
+const expandedGroups = ref(new Set());
+
+const toggleGroup = (idx) => {
+  if (expandedGroups.value.has(idx)) {
+    expandedGroups.value.delete(idx);
+  } else {
+    expandedGroups.value.add(idx);
+  }
+  expandedGroups.value = new Set(expandedGroups.value);
+};
+
 const groupedItems = computed(() => {
   if (!invoice.value?.items) return [];
   const map = {};
   invoice.value.items.forEach(item => {
     const name = item.supplier_name || 'غير معروف';
-    if (!map[name]) map[name] = { supplierName: name, items: [], total: 0 };
+    if (!map[name]) map[name] = { supplierName: name, items: [], total: 0, weight: 0 };
     map[name].items.push(item);
     map[name].total += Number(item.total_price);
+    map[name].weight += Number(item.weight);
   });
   return Object.values(map).sort((a, b) => b.total - a.total);
 });
