@@ -23,7 +23,9 @@
                 min="0"
                 v-model.number="d.count"
                 class="input !py-1.5 !px-2 w-24 tabular-nums text-center"
+                :data-idx="denominations.indexOf(d)"
                 @input="calc"
+                @keydown.enter="focusNextDenomination($event, denominations.indexOf(d))"
               />
             </td>
             <td class="px-4 py-2 tabular-nums font-medium">{{ (d.count * d.value).toLocaleString('en-US') }}</td>
@@ -35,11 +37,11 @@
     <div class="grid grid-cols-2 gap-3">
       <div>
         <label class="label">فلوس فضية (فكة)</label>
-        <input type="number" step="0.01" v-model.number="coins" class="input tabular-nums" @input="calc" />
+        <input type="number" step="0.01" v-model.number="coins" class="input tabular-nums" data-field="coins" @input="calc" @keydown.enter="focusNextField($event, 'cards')" />
       </div>
       <div>
         <label class="label">فلوس في البطاقات</label>
-        <input type="number" step="0.01" v-model.number="cards" class="input tabular-nums" @input="calc" />
+        <input type="number" step="0.01" v-model.number="cards" class="input tabular-nums" data-field="cards" @input="calc" @keydown.enter="apply" />
       </div>
     </div>
 
@@ -87,6 +89,23 @@ const total = computed(() =>
 );
 
 const calc = () => {};
+
+const focusNextDenomination = (e, idx) => {
+  e.preventDefault();
+  const inputs = document.querySelectorAll('[data-idx]');
+  if (idx < inputs.length - 1) {
+    inputs[idx + 1].focus();
+  } else {
+    const coinsField = document.querySelector('[data-field="coins"]');
+    if (coinsField) coinsField.focus();
+  }
+};
+
+const focusNextField = (e, field) => {
+  e.preventDefault();
+  const next = document.querySelector(`[data-field="${field}"]`);
+  if (next) next.focus();
+};
 
 const apply = () => {
   emit('apply', total.value);
