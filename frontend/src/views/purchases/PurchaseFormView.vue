@@ -9,110 +9,136 @@
 
     <div class="card p-6 space-y-6">
       <!-- Header fields -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div>
           <label class="label">رقم الفاتورة</label>
-          <input v-model="form.invoice_number" class="input" placeholder="INV-001" />
-        </div>
-        <div>
-          <label class="label">الدلال</label>
-          <select v-model="form.supplier_id" class="input">
-            <option value="">اختر الدلال</option>
-            <option v-for="s in suppliers" :key="s.id" :value="s.id">{{ s.name }}</option>
-          </select>
+          <input v-model="invoiceNumber" class="input tabular-nums" readonly />
         </div>
         <div>
           <label class="label">التاريخ</label>
-          <input type="date" v-model="form.purchase_date" class="input" />
+          <input type="date" v-model="purchaseDate" class="input" />
         </div>
         <div>
           <label class="label">طريقة الدفع</label>
-          <select v-model="form.payment_method" class="input">
+          <select v-model="paymentMethod" class="input">
             <option value="cash">نقدي</option>
             <option value="credit">آجل</option>
             <option value="transfer">تحويل</option>
           </select>
         </div>
-      </div>
-
-      <!-- Items -->
-      <div>
-        <div class="flex items-center justify-between mb-3">
-          <h3 class="font-bold text-primary-500">الأقلام</h3>
-          <button @click="addItem" class="btn-outline">
-            <Plus class="w-4 h-4" /> إضافة قلم
+        <div class="flex items-end">
+          <button @click="addRow" class="btn-outline w-full">
+            <Plus class="w-4 h-4" /> إضافة صف
           </button>
         </div>
+      </div>
 
-        <div class="overflow-x-auto">
-          <table class="w-full">
-            <thead>
-              <tr>
-                <th class="table-header">نوع السمك</th>
-                <th class="table-header">الوزن (كجم)</th>
-                <th class="table-header">الإجمالي (ر.س)</th>
-                <th class="table-header">سعر الكيلو</th>
-                <th class="table-header">تالف؟</th>
-                <th class="table-header">وزن التالف</th>
-                <th class="table-header"></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="(item, idx) in form.items" :key="idx" class="table-row">
-                <td class="table-cell">
-                  <select v-model="item.fish_type_id" class="input !py-1.5 text-sm">
-                    <option value="">اختر</option>
-                    <option v-for="f in fishTypes" :key="f.id" :value="f.id">{{ f.name }}</option>
-                  </select>
-                </td>
-                <td class="table-cell">
-                  <input type="number" step="0.001" v-model="item.weight" class="input !py-1.5 text-sm w-24 tabular-nums" @input="calcItem(item)" />
-                </td>
-                <td class="table-cell">
-                  <input type="number" step="0.01" v-model="item.total_price" class="input !py-1.5 text-sm w-24 tabular-nums" @input="calcItem(item)" />
-                </td>
-                <td class="table-cell font-bold text-primary-500 tabular-nums">{{ pricePerKilo(item) }}</td>
-                <td class="table-cell"><input type="checkbox" v-model="item.is_damaged" class="w-4 h-4" /></td>
-                <td class="table-cell">
-                  <input type="number" step="0.001" v-model="item.damaged_weight" class="input !py-1.5 text-sm w-20 tabular-nums" :disabled="!item.is_damaged" />
-                </td>
-                <td class="table-cell">
-                  <button @click="removeItem(idx)" class="p-1 rounded-lg hover:bg-red-50 text-red-400">
-                    <Trash2 class="w-4 h-4" />
-                  </button>
-                </td>
-              </tr>
-              <tr v-if="!form.items.length">
-                <td colspan="7" class="py-8 text-center text-gray-400">لا توجد أقلام — اضغط "إضافة قلم"</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Totals -->
-        <div class="mt-4 flex justify-end">
-          <div class="w-64 space-y-2">
-            <div class="flex justify-between text-sm">
-              <span class="text-gray-500">إجمالي الوزن:</span>
-              <span class="font-bold tabular-nums">{{ totalWeight.toFixed(3) }} كجم</span>
-            </div>
-            <div class="flex justify-between text-sm">
-              <span class="text-gray-500">إجمالي المبلغ:</span>
-              <span class="font-bold text-primary-500 tabular-nums">{{ totalAmount.toFixed(2) }} ر.س</span>
-            </div>
-          </div>
-        </div>
+      <!-- Multi-row table -->
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="bg-gray-50 border-b">
+              <th class="px-2 py-2.5 text-right font-medium text-gray-500 whitespace-nowrap w-8">#</th>
+              <th class="px-2 py-2.5 text-right font-medium text-gray-500 whitespace-nowrap w-24">رمز البائع</th>
+              <th class="px-2 py-2.5 text-right font-medium text-gray-500 whitespace-nowrap">اسم البائع</th>
+              <th class="px-2 py-2.5 text-right font-medium text-gray-500 whitespace-nowrap w-24">رمز السمك</th>
+              <th class="px-2 py-2.5 text-right font-medium text-gray-500 whitespace-nowrap">نوع السمك</th>
+              <th class="px-2 py-2.5 text-right font-medium text-gray-500 whitespace-nowrap w-28">الوزن (كجم)</th>
+              <th class="px-2 py-2.5 text-right font-medium text-gray-500 whitespace-nowrap w-28">سعر الشراء</th>
+              <th class="px-2 py-2.5 text-right font-medium text-gray-500 whitespace-nowrap w-28">الإجمالي</th>
+              <th class="px-2 py-2.5 text-center font-medium text-gray-500 whitespace-nowrap w-8"></th>
+            </tr>
+          </thead>
+          <tbody class="divide-y">
+            <tr v-for="(row, idx) in rows" :key="idx" class="hover:bg-gray-50/30">
+              <td class="px-2 py-1.5 text-center text-gray-400 text-xs">{{ idx + 1 }}</td>
+              <td class="px-2 py-1.5">
+                <input
+                  :ref="el => supplierCodeRefs[idx] = el"
+                  v-model="row.supplierCode"
+                  type="text"
+                  class="input !py-1.5 text-sm tabular-nums w-20"
+                  placeholder="1"
+                  @input="onSupplierCodeInput(idx)"
+                  @keydown.enter="focusCell(idx, 'fishCode')"
+                />
+              </td>
+              <td class="px-2 py-1.5">
+                <span class="text-sm font-medium text-gray-700">{{ row.supplierName || '—' }}</span>
+              </td>
+              <td class="px-2 py-1.5">
+                <input
+                  :ref="el => fishCodeRefs[idx] = el"
+                  v-model="row.fishCode"
+                  type="text"
+                  class="input !py-1.5 text-sm tabular-nums w-20"
+                  placeholder="1"
+                  @input="onFishCodeInput(idx)"
+                  @keydown.enter="focusCell(idx, 'weight')"
+                />
+              </td>
+              <td class="px-2 py-1.5">
+                <span class="text-sm font-medium text-gray-700">{{ row.fishName || '—' }}</span>
+              </td>
+              <td class="px-2 py-1.5">
+                <input
+                  :ref="el => weightRefs[idx] = el"
+                  v-model="row.weight"
+                  type="number"
+                  step="0.001"
+                  class="input !py-1.5 text-sm tabular-nums w-24"
+                  placeholder="0.000"
+                  @input="calcRow(row)"
+                  @keydown.enter="focusCell(idx, 'price')"
+                />
+              </td>
+              <td class="px-2 py-1.5">
+                <input
+                  :ref="el => priceRefs[idx] = el"
+                  v-model="row.total_price"
+                  type="number"
+                  step="0.01"
+                  class="input !py-1.5 text-sm tabular-nums w-24"
+                  placeholder="0.00"
+                  @input="calcRow(row)"
+                  @keydown.enter="onLastCellEnter(idx)"
+                />
+              </td>
+              <td class="px-2 py-1.5 font-bold text-primary-500 tabular-nums">
+                {{ rowTotal(row).toFixed(2) }}
+              </td>
+              <td class="px-2 py-1.5 text-center">
+                <button @click="removeRow(idx)" class="p-1 rounded-lg hover:bg-red-50 text-red-400">
+                  <Trash2 class="w-4 h-4" />
+                </button>
+              </td>
+            </tr>
+            <tr v-if="!rows.length">
+              <td colspan="9" class="py-8 text-center text-gray-400">لا توجد صفوف — اضغط "إضافة صف"</td>
+            </tr>
+          </tbody>
+          <tfoot v-if="rows.length">
+            <tr class="bg-primary-50 border-t-2 border-primary-100">
+              <td colspan="5" class="px-2 py-3 text-left font-bold text-gray-600">الإجمالي:</td>
+              <td class="px-2 py-3 font-bold tabular-nums text-gray-700">{{ totalWeight.toFixed(3) }} كجم</td>
+              <td></td>
+              <td class="px-2 py-3 font-bold tabular-nums text-primary-500">{{ totalAmount.toFixed(2) }} ر.س</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
       </div>
 
       <div>
         <label class="label">ملاحظات</label>
-        <textarea v-model="form.notes" class="input" rows="2"></textarea>
+        <textarea v-model="notes" class="input" rows="2"></textarea>
       </div>
 
       <div class="flex justify-end gap-3">
         <router-link to="/purchases" class="btn-ghost">إلغاء</router-link>
         <button @click="save" class="btn-gold" :disabled="saving">
           <Loader2 v-if="saving" class="w-4 h-4 animate-spin" />
+          <Save class="w-4 h-4" v-else />
           <span>حفظ الفاتورة</span>
         </button>
       </div>
@@ -123,7 +149,7 @@
 <script setup>
 import { ref, reactive, computed, inject, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import { ArrowRight, Plus, Trash2, Loader2 } from 'lucide-vue-next';
+import { ArrowRight, Plus, Trash2, Save, Loader2 } from 'lucide-vue-next';
 import api from '../../api';
 
 const router = useRouter();
@@ -132,64 +158,170 @@ const toast = inject('toast');
 
 const suppliers = ref([]);
 const fishTypes = ref([]);
+const invoiceNumber = ref('');
+const purchaseDate = ref(new Date().toISOString().split('T')[0]);
+const paymentMethod = ref('cash');
+const notes = ref('');
 const saving = ref(false);
+const rows = ref([]);
+
+const supplierCodeRefs = ref([]);
+const fishCodeRefs = ref([]);
+const weightRefs = ref([]);
+const priceRefs = ref([]);
 
 const isEditing = computed(() => !!route.params.id);
 const pageTitle = computed(() => isEditing.value ? 'تعديل فاتورة شراء' : 'فاتورة شراء جديدة');
 
-const form = reactive({
-  invoice_number: '',
-  supplier_id: '',
-  purchase_date: new Date().toISOString().split('T')[0],
-  payment_method: 'cash',
-  notes: '',
-  items: [],
+const supplierMap = computed(() => {
+  const m = {};
+  suppliers.value.forEach(s => { m[String(s.code)] = s; });
+  return m;
 });
 
-const addItem = () => {
-  form.items.push({
-    fish_type_id: '', weight: 0, price_per_kilo: 0, total_price: 0,
-    is_damaged: false, damaged_weight: 0,
+const fishMap = computed(() => {
+  const m = {};
+  fishTypes.value.forEach(f => { m[String(f.id)] = f; });
+  return m;
+});
+
+const totalWeight = computed(() => rows.value.reduce((s, r) => s + Number(r.weight || 0), 0));
+const totalAmount = computed(() => rows.value.reduce((s, r) => s + rowTotal(r), 0));
+
+const rowTotal = (row) => Number(row.total_price || 0);
+
+const calcRow = (row) => {
+  row.price_per_kilo = Number(row.weight) > 0
+    ? Number(row.total_price) / Number(row.weight)
+    : 0;
+};
+
+const addRow = () => {
+  rows.value.push({
+    supplierCode: '',
+    supplierId: null,
+    supplierName: '',
+    fishCode: '',
+    fishTypeId: null,
+    fishName: '',
+    weight: 0,
+    total_price: 0,
+    price_per_kilo: 0,
+    is_damaged: false,
+    damaged_weight: 0,
   });
-  // total_price is editable, price_per_kilo is calculated
 };
 
-const removeItem = (idx) => { form.items.splice(idx, 1); };
-
-const calcItem = (item) => {
-  item.price_per_kilo = Number(item.weight || 0) > 0
-    ? Number(item.total_price || 0) / Number(item.weight)
-    : 0;
+const removeRow = (idx) => {
+  rows.value.splice(idx, 1);
 };
 
-const pricePerKilo = (item) => {
-  const p = Number(item.weight || 0) > 0
-    ? Number(item.total_price || 0) / Number(item.weight)
-    : 0;
-  return p.toFixed(2);
+const onSupplierCodeInput = (idx) => {
+  const row = rows.value[idx];
+  const supplier = supplierMap.value[row.supplierCode?.trim()];
+  if (supplier) {
+    row.supplierId = supplier.id;
+    row.supplierName = supplier.name;
+  } else {
+    row.supplierId = null;
+    row.supplierName = '';
+  }
 };
 
-const totalWeight = computed(() => form.items.reduce((s, i) => s + Number(i.weight || 0), 0));
-const totalAmount = computed(() => form.items.reduce((s, i) => s + Number(i.total_price || 0), 0));
+const onFishCodeInput = (idx) => {
+  const row = rows.value[idx];
+  const fish = fishMap.value[row.fishCode?.trim()];
+  if (fish) {
+    row.fishTypeId = fish.id;
+    row.fishName = fish.name;
+  } else {
+    row.fishTypeId = null;
+    row.fishName = '';
+  }
+};
+
+const focusCell = (idx, field) => {
+  const refMap = {
+    fishCode: fishCodeRefs,
+    weight: weightRefs,
+    price: priceRefs,
+    supplierCode: supplierCodeRefs,
+  };
+  const refs = refMap[field];
+  if (refs.value && refs.value[idx]) {
+    refs.value[idx].focus();
+    refs.value[idx].select();
+  }
+};
+
+const onLastCellEnter = (idx) => {
+  if (idx === rows.value.length - 1) {
+    addRow();
+    setTimeout(() => {
+      if (supplierCodeRefs.value[idx + 1]) {
+        supplierCodeRefs.value[idx + 1].focus();
+      }
+    }, 50);
+  } else {
+    focusCell(idx + 1, 'supplierCode');
+  }
+};
+
+const fetchInvoiceNumber = async () => {
+  try {
+    const { data } = await api.get('/purchases/next-invoice');
+    invoiceNumber.value = data.invoice_number;
+  } catch (err) {
+    invoiceNumber.value = `PUR-${Date.now()}`;
+  }
+};
 
 const save = async () => {
-  if (!form.invoice_number || !form.supplier_id || !form.items.length) {
-    toast('يرجى إكمال البيانات', 'error');
+  const validRows = rows.value.filter(r => r.supplierId && r.fishTypeId && Number(r.weight) > 0 && Number(r.total_price) > 0);
+  if (!validRows.length) {
+    toast('لا توجد صفوف صحيحة للحفظ', 'error');
     return;
   }
+
+  const grouped = {};
+  validRows.forEach(r => {
+    if (!grouped[r.supplierId]) grouped[r.supplierId] = [];
+    grouped[r.supplierId].push({
+      fish_type_id: r.fishTypeId,
+      weight: Number(r.weight),
+      total_price: Number(r.total_price),
+      price_per_kilo: Number(r.weight) > 0 ? Number(r.total_price) / Number(r.weight) : 0,
+      is_damaged: r.is_damaged,
+      damaged_weight: Number(r.damaged_weight || 0),
+    });
+  });
+
+  const batchRows = Object.entries(grouped).map(([supplierId, items]) => ({
+    supplier_id: parseInt(supplierId),
+    items,
+  }));
+
   saving.value = true;
   try {
-    const payload = {
-      ...form,
-      total_weight: totalWeight.value,
-      total_amount: totalAmount.value,
-    };
     if (isEditing.value) {
-      await api.put(`/purchases/${route.params.id}`, payload);
-      toast('تم تعديل الفاتورة بنجاح');
+      await api.delete(`/purchases/invoice/${invoiceNumber.value}`);
+      const { data } = await api.post('/purchases/batch', {
+        rows: batchRows,
+        purchase_date: purchaseDate.value,
+        invoice_number: invoiceNumber.value,
+        payment_method: paymentMethod.value,
+        notes: notes.value,
+      });
+      toast(`تم تعديل الفاتورة بنجاح (${data.created} قلم)`);
     } else {
-      await api.post('/purchases', payload);
-      toast('تم حفظ الفاتورة بنجاح');
+      const { data } = await api.post('/purchases/batch', {
+        rows: batchRows,
+        purchase_date: purchaseDate.value,
+        invoice_number: invoiceNumber.value,
+        payment_method: paymentMethod.value,
+        notes: notes.value,
+      });
+      toast(`تم حفظ الفاتورة بنجاح (${data.created} قلم)`);
     }
     router.push('/purchases');
   } catch (err) {
@@ -199,7 +331,7 @@ const save = async () => {
   }
 };
 
-onMounted(async () => {
+const loadData = async () => {
   try {
     const [s, f] = await Promise.all([
       api.get('/suppliers', { params: { limit: 500 } }),
@@ -209,28 +341,33 @@ onMounted(async () => {
     fishTypes.value = f.data.data || f.data;
 
     if (route.params.id) {
-      const { data } = await api.get(`/purchases/${route.params.id}`);
-      Object.assign(form, {
-        invoice_number: data.invoice_number,
-        supplier_id: data.supplier_id,
-        purchase_date: data.purchase_date,
-        payment_method: data.payment_method,
-        notes: data.notes || '',
-        items: (data.items || []).map(i => ({
-          id: i.id,
-          fish_type_id: i.fish_type_id,
-          weight: Number(i.weight),
-          total_price: Number(i.total_price),
-          price_per_kilo: Number(i.price_per_kilo),
-          is_damaged: i.is_damaged,
-          damaged_weight: Number(i.damaged_weight || 0),
-        })),
-      });
+      const { data } = await api.get(`/purchases/invoice/${route.params.id}`);
+      const invoice = data;
+      invoiceNumber.value = invoice.invoice_number;
+      purchaseDate.value = invoice.purchase_date;
+      paymentMethod.value = invoice.payment_method;
+      notes.value = invoice.notes || '';
+      rows.value = (invoice.items || []).map(item => ({
+        supplierCode: String(item.supplier_code || ''),
+        supplierId: item.supplier_id,
+        supplierName: item.supplier_name || '',
+        fishCode: String(item.fish_type_id || ''),
+        fishTypeId: item.fish_type_id,
+        fishName: item.fish_name || '',
+        weight: Number(item.weight),
+        total_price: Number(item.total_price),
+        price_per_kilo: Number(item.price_per_kilo),
+        is_damaged: item.is_damaged,
+        damaged_weight: Number(item.damaged_weight || 0),
+      }));
     } else {
-      addItem();
+      await fetchInvoiceNumber();
+      addRow();
     }
   } catch (err) {
     toast('فشل تحميل البيانات', 'error');
   }
-});
+};
+
+onMounted(loadData);
 </script>

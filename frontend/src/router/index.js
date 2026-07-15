@@ -32,7 +32,6 @@ const routes = [
       { path: 'suppliers', name: 'suppliers', component: () => import('../views/suppliers/SuppliersListView.vue') },
       { path: 'suppliers/:id', name: 'supplier-detail', component: () => import('../views/suppliers/SupplierDetailView.vue') },
       { path: 'purchases', name: 'purchases', component: () => import('../views/purchases/PurchasesListView.vue') },
-      { path: 'purchases/quick', name: 'purchase-quick', component: () => import('../views/purchases/QuickPurchaseView.vue') },
       { path: 'purchase-custody', name: 'purchase-custody', component: () => import('../views/purchases/PurchaseCustodyView.vue') },
       { path: 'inventory', name: 'inventory', component: () => import('../views/inventory/InventoryView.vue') },
       { path: 'purchases/new', name: 'purchase-new', component: () => import('../views/purchases/PurchaseFormView.vue') },

@@ -159,7 +159,6 @@ const navItems = computed(() => {
     { path: '/fish-cost', label: L('product_cost', 'تكلفة السمك'), icon: FishIcon },
     { path: '/suppliers', label: L('suppliers', 'الدلالين'), icon: Users },
     { path: '/purchases', label: 'المشتريات', icon: ShoppingCart },
-    { path: '/purchases/quick', label: 'مشتريات سريعة', icon: ShoppingCart },
     { path: '/purchase-custody', label: 'عهدة مشتريات', icon: Wallet },
     { path: '/inventory', label: 'الجرد', icon: FishIcon },
     { path: '/statistics', label: 'الإحصائيات', icon: BarChart3 },

@@ -144,6 +144,129 @@ router.post('/purchases/batch', auth, role('admin', 'manager'), async (req, res,
   } catch (err) { next(err); }
 });
 
+// List all invoices grouped by invoice_number
+router.get('/purchases/invoices', auth, async (req, res, next) => {
+  try {
+    const { Op, literal } = require('sequelize');
+    const purchases = await Purchase.findAll({
+      include: [
+        { model: Supplier, as: 'supplier' },
+        { model: PurchaseItem, as: 'items', include: [{ model: FishType, as: 'fishType' }] },
+      ],
+      order: [['purchase_date', 'DESC'], ['id', 'DESC']],
+    });
+
+    const invoiceMap = {};
+    purchases.forEach(p => {
+      const invNum = p.invoice_number;
+      if (!invoiceMap[invNum]) {
+        invoiceMap[invNum] = {
+          invoice_number: invNum,
+          purchase_date: p.purchase_date,
+          payment_method: p.payment_method,
+          notes: p.notes,
+          first_purchase_id: p.id,
+          total_weight: 0,
+          total_amount: 0,
+          items_count: 0,
+          suppliers: new Set(),
+          items: [],
+        };
+      }
+      invoiceMap[invNum].total_weight += parseFloat(p.total_weight || 0);
+      invoiceMap[invNum].total_amount += parseFloat(p.total_amount || 0);
+      invoiceMap[invNum].items_count += p.items.length;
+      invoiceMap[invNum].suppliers.add(p.supplier ? p.supplier.name : 'غير معروف');
+      p.items.forEach(item => {
+        invoiceMap[invNum].items.push({
+          fish_type_id: item.fish_type_id,
+          fish_name: item.fishType ? item.fishType.name : 'غير معروف',
+          supplier_id: p.supplier_id,
+          supplier_name: p.supplier ? p.supplier.name : 'غير معروف',
+          supplier_code: p.supplier ? p.supplier.code : '',
+          weight: parseFloat(item.weight),
+          price_per_kilo: parseFloat(item.price_per_kilo),
+          total_price: parseFloat(item.total_price),
+          is_damaged: item.is_damaged,
+          damaged_weight: parseFloat(item.damaged_weight || 0),
+        });
+      });
+    });
+
+    const result = Object.values(invoiceMap).map(inv => ({
+      ...inv,
+      suppliers_count: inv.suppliers.size,
+    }));
+
+    res.json({ data: result });
+  } catch (err) { next(err); }
+});
+
+// Get full invoice by first purchase id (aggregates all purchases with same invoice_number)
+router.get('/purchases/invoice/:id', auth, async (req, res, next) => {
+  try {
+    const basePurchase = await Purchase.findByPk(req.params.id);
+    if (!basePurchase) return res.status(404).json({ error: 'الفاتورة غير موجودة' });
+
+    const purchases = await Purchase.findAll({
+      where: { invoice_number: basePurchase.invoice_number },
+      include: [
+        { model: Supplier, as: 'supplier' },
+        { model: PurchaseItem, as: 'items', include: [{ model: FishType, as: 'fishType' }] },
+      ],
+      order: [['id', 'ASC']],
+    });
+
+    const allItems = [];
+    let totalWeight = 0;
+    let totalAmount = 0;
+    purchases.forEach(p => {
+      p.items.forEach(item => {
+        allItems.push({
+          fish_type_id: item.fish_type_id,
+          fish_name: item.fishType ? item.fishType.name : 'غير معروف',
+          supplier_id: p.supplier_id,
+          supplier_name: p.supplier ? p.supplier.name : 'غير معروف',
+          supplier_code: p.supplier ? p.supplier.code : '',
+          weight: parseFloat(item.weight),
+          price_per_kilo: parseFloat(item.price_per_kilo),
+          total_price: parseFloat(item.total_price),
+          is_damaged: item.is_damaged,
+          damaged_weight: parseFloat(item.damaged_weight || 0),
+        });
+        totalWeight += parseFloat(item.weight);
+        totalAmount += parseFloat(item.total_price);
+      });
+    });
+
+    res.json({
+      invoice_number: basePurchase.invoice_number,
+      purchase_date: basePurchase.purchase_date,
+      payment_method: basePurchase.payment_method,
+      notes: basePurchase.notes,
+      first_purchase_id: basePurchase.id,
+      total_weight: totalWeight,
+      total_amount: totalAmount,
+      items: allItems,
+    });
+  } catch (err) { next(err); }
+});
+
+// Delete entire invoice by invoice_number
+router.delete('/purchases/invoice/:invoiceNumber', auth, role('admin', 'manager'), async (req, res, next) => {
+  try {
+    const purchases = await Purchase.findAll({
+      where: { invoice_number: req.params.invoiceNumber },
+    });
+    if (!purchases.length) return res.status(404).json({ error: 'الفاتورة غير موجودة' });
+    for (const p of purchases) {
+      await PurchaseItem.destroy({ where: { purchase_id: p.id } });
+      await p.destroy();
+    }
+    res.json({ message: 'تم حذف الفاتورة', deleted: purchases.length });
+  } catch (err) { next(err); }
+});
+
 // Daily Sales
 const saleCtrl = createCrud(DailySale, 'الحركة المالية');
 router.get('/sales', auth, saleCtrl.list);

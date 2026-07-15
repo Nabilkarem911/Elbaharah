@@ -2,7 +2,6 @@
   <div class="space-y-6">
     <PageHeader title="المشتريات" subtitle="فواتير شراء الأسماك من الدلالين">
       <template #actions>
-        <ExportButton :data="filteredPurchases" :columns="exportColumns" filename="المشتريات" title="فواتير المشتريات" />
         <router-link to="/purchases/new" class="btn-gold">
           <Plus class="w-4 h-4" /> فاتورة جديدة
         </router-link>
@@ -10,18 +9,22 @@
     </PageHeader>
 
     <div class="card p-4 flex flex-wrap gap-3">
-      <select v-model="filterSupplier" class="input !py-1.5 text-sm w-auto">
-        <option value="">كل الدلالين</option>
-        <option v-for="s in suppliers" :key="s.id" :value="s.id">{{ s.name }}</option>
-      </select>
+      <input type="date" v-model="filterDate" class="input !py-1.5 text-sm w-auto" @change="loadData" />
+      <button @click="clearFilter" class="btn-ghost !py-1.5 text-sm" v-if="filterDate">مسح الفلتر</button>
     </div>
 
-    <DataTable :data="filteredPurchases" :columns="columns" searchable>
-      <template #cell-supplier="{ value }">
-        <span class="font-medium">{{ value?.name || '—' }}</span>
+    <DataTable :data="filteredInvoices" :columns="columns" searchable>
+      <template #cell-suppliers_count="{ value }">
+        <span class="badge-info">{{ value }} مورد</span>
+      </template>
+      <template #cell-items_count="{ value }">
+        <span class="badge-info">{{ value }} قلم</span>
+      </template>
+      <template #cell-payment_method="{ value }">
+        <span class="badge-success">{{ paymentLabels[value] || value }}</span>
       </template>
       <template #actions="{ row }">
-        <router-link :to="`/purchases/${row.id}`" class="p-1.5 rounded-lg hover:bg-primary-50 text-primary-400">
+        <router-link :to="`/purchases/${row.first_purchase_id}`" class="p-1.5 rounded-lg hover:bg-primary-50 text-primary-400">
           <Eye class="w-4 h-4" />
         </router-link>
       </template>
@@ -34,47 +37,40 @@ import { ref, computed, inject, onMounted } from 'vue';
 import { Plus, Eye } from 'lucide-vue-next';
 import PageHeader from '../../components/PageHeader.vue';
 import DataTable from '../../components/DataTable.vue';
-import ExportButton from '../../components/ExportButton.vue';
 import api from '../../api';
 
 const toast = inject('toast');
 
+const paymentLabels = { cash: 'نقدي', credit: 'آجل', transfer: 'تحويل' };
+
 const columns = [
   { key: 'invoice_number', label: 'رقم الفاتورة', sortable: true },
   { key: 'purchase_date', label: 'التاريخ', sortable: true },
-  { key: 'supplier', label: 'الدلال' },
+  { key: 'suppliers_count', label: 'الموردين' },
+  { key: 'items_count', label: 'الأقلام' },
   { key: 'total_weight', label: 'الوزن', type: 'weight' },
   { key: 'total_amount', label: 'المبلغ', type: 'currency', sortable: true },
   { key: 'payment_method', label: 'الدفع' },
 ];
 
-const exportColumns = [
-  { key: 'invoice_number', label: 'رقم الفاتورة' },
-  { key: 'purchase_date', label: 'التاريخ' },
-  { key: 'supplier_name', label: 'الدلال' },
-  { key: 'total_weight', label: 'الوزن' },
-  { key: 'total_amount', label: 'المبلغ' },
-  { key: 'payment_method', label: 'الدفع' },
-];
+const invoices = ref([]);
+const filterDate = ref('');
 
-const purchases = ref([]);
-const suppliers = ref([]);
-const filterSupplier = ref('');
+const filteredInvoices = computed(() => {
+  if (!filterDate.value) return invoices.value;
+  return invoices.value.filter(inv => inv.purchase_date === filterDate.value);
+});
 
-const filteredPurchases = computed(() =>
-  !filterSupplier.value ? purchases.value : purchases.value.filter(p => p.supplier_id == filterSupplier.value)
-);
+const clearFilter = () => { filterDate.value = ''; };
 
-onMounted(async () => {
+const loadData = async () => {
   try {
-    const [p, s] = await Promise.all([
-      api.get('/purchases', { params: { limit: 500 } }),
-      api.get('/suppliers', { params: { limit: 500 } }),
-    ]);
-    purchases.value = p.data.data || p.data;
-    suppliers.value = s.data.data || s.data;
+    const { data } = await api.get('/purchases/invoices');
+    invoices.value = data.data || data;
   } catch (err) {
     toast('فشل تحميل البيانات', 'error');
   }
-});
+};
+
+onMounted(loadData);
 </script>
