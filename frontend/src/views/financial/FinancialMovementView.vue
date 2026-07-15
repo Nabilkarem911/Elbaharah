@@ -57,14 +57,14 @@
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
           <label class="label">التاريخ</label>
-          <input type="date" v-model="form.sale_date" class="input" />
+          <input type="date" v-model="form.sale_date" class="input" data-field="sale_date" @keydown.enter="focusNext($event, 'total_sales')" />
         </div>
         <div>
           <label class="label">إجمالي المبيعات</label>
           <input
             type="number" step="0.01" v-model="form.total_sales"
             class="input tabular-nums"
-            @keydown.enter="focusNext($event, 'custody')"
+            @keydown.enter="focusNext($event, 'other_sales')"
             data-field="total_sales"
           />
         </div>
@@ -112,7 +112,7 @@
         </div>
         <div v-for="p in deliveryPlatforms" :key="p.id">
           <label class="label">{{ p.name }}</label>
-          <input type="number" step="0.01" v-model="form[p.key]" class="input tabular-nums" />
+          <input type="number" step="0.01" v-model="form[p.key]" class="input tabular-nums" :data-field="p.key" @keydown.enter="focusNext($event, 'mada')" />
         </div>
         <div>
           <label class="label">مدى</label>
@@ -152,11 +152,11 @@
         </div>
         <div>
           <label class="label">مبيعات التوصيل</label>
-          <input type="number" step="0.01" v-model="form.delivery_sales" class="input tabular-nums" />
+          <input type="number" step="0.01" v-model="form.delivery_sales" class="input tabular-nums" data-field="delivery_sales" @keydown.enter="focusNext($event, 'delivery_orders_count')" />
         </div>
         <div>
           <label class="label">عدد طلبات التوصيل</label>
-          <input type="number" v-model="form.delivery_orders_count" class="input tabular-nums" />
+          <input type="number" v-model="form.delivery_orders_count" class="input tabular-nums" data-field="delivery_orders_count" @keydown.enter="focusNext($event, null)" />
         </div>
         <div class="md:col-span-3">
           <label class="label">ملاحظات</label>
