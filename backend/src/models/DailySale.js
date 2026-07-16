@@ -114,6 +114,18 @@ const DailySale = sequelize.define('DailySale', {
   tableName: 'daily_sales',
   hooks: {
     beforeSave: (sale) => {
+      // Convert empty strings to 0 for all numeric fields
+      const numericFields = [
+        'total_sales', 'other_sales', 'credit_sales', 'cash_box', 'custody',
+        'app_elbharah', 'hunger_station', 'keta', 'toyo', 'mada', 'visa',
+        'mastercard', 'bank_transfer', 'net_sales', 'recorded_sales',
+        'surplus_deficit', 'network_sales', 'delivery_sales', 'delivery_orders_count',
+      ];
+      for (const field of numericFields) {
+        if (sale[field] === '' || sale[field] === null || sale[field] === undefined) {
+          sale[field] = 0;
+        }
+      }
       sale.net_sales =
         parseFloat(sale.cash_box || 0) +
         parseFloat(sale.app_elbharah || 0) +

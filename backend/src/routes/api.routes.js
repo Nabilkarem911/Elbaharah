@@ -52,7 +52,6 @@ const purchaseCtrl = createCrud(Purchase, 'فاتورة الشراء', [
   { model: PurchaseItem, as: 'items', include: [{ model: FishType, as: 'fishType' }] },
 ]);
 router.get('/purchases', auth, purchaseCtrl.list);
-router.get('/purchases/:id', auth, purchaseCtrl.getById);
 router.post('/purchases', auth, role('admin', 'manager'), [
   body('invoice_number').trim().notEmpty().withMessage('رقم الفاتورة مطلوب'),
   body('supplier_id').isInt({ min: 1 }).withMessage('الدلال مطلوب'),
@@ -105,7 +104,7 @@ router.put('/purchases/:id', auth, role('admin', 'manager'), [
 });
 router.delete('/purchases/:id', auth, role('admin'), purchaseCtrl.remove);
 
-// Get next invoice number for purchases
+// Get next invoice number for purchases (MUST be before /:id)
 router.get('/purchases/next-invoice', auth, async (req, res, next) => {
   try {
     const { Op } = require('sequelize');
@@ -158,7 +157,7 @@ router.post('/purchases/batch', auth, role('admin', 'manager'), async (req, res,
   } catch (err) { next(err); }
 });
 
-// List all invoices grouped by invoice_number
+// List all invoices grouped by invoice_number (MUST be before /:id)
 router.get('/purchases/invoices', auth, async (req, res, next) => {
   try {
     const { Op, literal } = require('sequelize');
@@ -220,7 +219,7 @@ router.get('/purchases/invoices', auth, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// Get full invoice by first purchase id (aggregates all purchases with same invoice_number)
+// Get full invoice by first purchase id (MUST be before /:id)
 router.get('/purchases/invoice/:id', auth, async (req, res, next) => {
   try {
     const baseWhere = { id: req.params.id };
@@ -273,7 +272,7 @@ router.get('/purchases/invoice/:id', auth, async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
-// Delete entire invoice by invoice_number
+// Delete entire invoice by invoice_number (MUST be before /:id)
 router.delete('/purchases/invoice/:invoiceNumber', auth, role('admin', 'manager'), async (req, res, next) => {
   try {
     const where = { invoice_number: req.params.invoiceNumber };
@@ -289,6 +288,9 @@ router.delete('/purchases/invoice/:invoiceNumber', auth, role('admin', 'manager'
     res.json({ message: 'تم حذف الفاتورة', deleted: purchases.length });
   } catch (err) { next(err); }
 });
+
+// Get single purchase by ID (MUST be after all specific routes like /next-invoice, /invoices, /invoice/:id)
+router.get('/purchases/:id', auth, purchaseCtrl.getById);
 
 // Daily Sales
 const saleCtrl = createCrud(DailySale, 'الحركة المالية');
@@ -428,7 +430,6 @@ router.delete('/cancelled-invoices/:id', auth, role('admin', 'manager'), cancell
 
 // Fish Inventory
 const inventoryCtrl = createCrud(FishInventory, 'جرد الأسماك', [{ model: FishType, as: 'fishType' }]);
-router.get('/fish-inventory', auth, inventoryCtrl.list);
 router.post('/fish-inventory', auth, role('admin', 'manager', 'accountant'), inventoryCtrl.create);
 router.put('/fish-inventory/:id', auth, role('admin', 'manager', 'accountant'), inventoryCtrl.update);
 router.delete('/fish-inventory/:id', auth, role('admin'), inventoryCtrl.remove);

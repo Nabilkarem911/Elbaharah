@@ -67,6 +67,8 @@ function createCrudController(Model, modelName, includeAssoc = []) {
     create: async (req, res, next) => {
       try {
         const data = { ...req.body };
+        // Strip id to prevent duplicate key violations
+        delete data.id;
         if (req.user && req.user.id) {
           data.created_by = req.user.id;
         }
@@ -77,6 +79,15 @@ function createCrudController(Model, modelName, includeAssoc = []) {
         // Auto-assign branch_id if model has it and non-admin user has one
         if (req.user && req.user.branch_id && req.user.role !== 'admin' && Model.rawAttributes.branch_id && !data.branch_id) {
           data.branch_id = req.user.branch_id;
+        }
+        // Convert empty strings to null for numeric/decimal fields
+        for (const [key, val] of Object.entries(data)) {
+          if (val === '' && Model.rawAttributes[key] && Model.rawAttributes[key].type) {
+            const typeStr = Model.rawAttributes[key].type.toString();
+            if (typeStr.includes('DECIMAL') || typeStr.includes('INTEGER') || typeStr.includes('FLOAT') || typeStr.includes('DOUBLE')) {
+              data[key] = null;
+            }
+          }
         }
         const item = await Model.create(data);
         res.status(201).json(item);
@@ -92,7 +103,18 @@ function createCrudController(Model, modelName, includeAssoc = []) {
         }
         const item = await Model.findOne({ where });
         if (!item) return res.status(404).json({ error: `${modelName} غير موجود` });
-        await item.update(req.body);
+        const updateData = { ...req.body };
+        delete updateData.id;
+        // Convert empty strings to null for numeric/decimal fields
+        for (const [key, val] of Object.entries(updateData)) {
+          if (val === '' && Model.rawAttributes[key] && Model.rawAttributes[key].type) {
+            const typeStr = Model.rawAttributes[key].type.toString();
+            if (typeStr.includes('DECIMAL') || typeStr.includes('INTEGER') || typeStr.includes('FLOAT') || typeStr.includes('DOUBLE')) {
+              updateData[key] = null;
+            }
+          }
+        }
+        await item.update(updateData);
         res.json(item);
       } catch (err) {
         next(err);
