@@ -123,7 +123,7 @@ router.get('/:orgId/branches', auth, superAdmin, async (req, res, next) => {
   try {
     const branches = await Branch.findAll({
       where: { organization_id: req.params.orgId },
-      order: [['is_main', 'DESC'], ['createdAt', 'ASC']],
+      order: [['is_main', 'DESC'], ['id', 'ASC']],
     });
     res.json(branches);
   } catch (err) { next(err); }
@@ -166,6 +166,39 @@ router.delete('/:orgId/branches/:branchId', auth, superAdmin, async (req, res, n
     if (branch.is_main) return res.status(400).json({ error: 'لا يمكن حذف الفرع الرئيسي' });
     await branch.destroy();
     res.json({ message: 'تم حذف الفرع بنجاح' });
+  } catch (err) { next(err); }
+});
+
+// Impersonate organization (super admin logs in as the org's admin)
+router.post('/:id/impersonate', auth, superAdmin, async (req, res, next) => {
+  try {
+    const org = await Organization.findByPk(req.params.id, {
+      include: [{ model: User, as: 'users', where: { role: 'admin' }, required: false }],
+    });
+    if (!org) return res.status(404).json({ error: 'المنشأة غير موجودة' });
+    const adminUser = (org.users || []).find(u => u.role === 'admin');
+    if (!adminUser) return res.status(400).json({ error: 'لا يوجد أدمن لهذه المنشأة' });
+
+    const jwt = require('jsonwebtoken');
+    const token = jwt.sign(
+      {
+        id: adminUser.id,
+        username: adminUser.username,
+        role: adminUser.role,
+        full_name: adminUser.full_name,
+        organization_id: adminUser.organization_id,
+        branch_id: adminUser.branch_id,
+        impersonated_by: req.user.id,
+      },
+      process.env.JWT_SECRET || 'elbharah_jwt_secret_key_2026',
+      { expiresIn: '2h' }
+    );
+
+    res.json({
+      token,
+      user: adminUser.toJSON(),
+      impersonated_by: req.user.id,
+    });
   } catch (err) { next(err); }
 });
 

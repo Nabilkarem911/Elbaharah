@@ -79,7 +79,7 @@ router.beforeEach((to, from, next) => {
   if (to.meta.superAdmin && !auth.isSuperAdmin) {
     return next('/dashboard');
   }
-  if (auth.isSuperAdmin && !to.path.startsWith('/super-admin') && !to.path.startsWith('/login')) {
+  if (auth.isSuperAdmin && !to.path.startsWith('/super-admin') && !to.path.startsWith('/login') && !auth.isImpersonating) {
     return next('/super-admin');
   }
   next();

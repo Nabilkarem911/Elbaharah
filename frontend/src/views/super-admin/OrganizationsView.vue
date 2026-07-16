@@ -116,6 +116,13 @@
                   <Eye class="w-4 h-4" />
                 </button>
                 <button
+                  @click="openOrg(org)"
+                  class="p-2 rounded-lg hover:bg-green-50 text-green-600 transition-colors"
+                  title="فتح المنشأة"
+                >
+                  <LogIn class="w-4 h-4" />
+                </button>
+                <button
                   @click="toggleOrg(org)"
                   class="p-2 rounded-lg hover:bg-amber-50 text-amber-500 transition-colors"
                   :title="org.is_active ? 'إيقاف' : 'تفعيل'"
@@ -254,10 +261,14 @@ import api from '../../api';
 import Modal from '../../components/Modal.vue';
 import {
   Plus, Building2, Eye, Trash2, CheckCircle, PauseCircle, PlayCircle,
-  Loader2,
+  Loader2, LogIn,
 } from 'lucide-vue-next';
+import { useAuthStore } from '../../stores/auth.store';
+import { useRouter } from 'vue-router';
 
 const showToast = inject('toast');
+const authStore = useAuthStore();
+const router = useRouter();
 const organizations = ref([]);
 const loading = ref(true);
 const showModal = ref(false);
@@ -339,6 +350,16 @@ const deleteOrg = async (org) => {
     await fetchOrganizations();
   } catch (err) {
     showToast('فشل حذف المنشأة', 'error');
+  }
+};
+
+const openOrg = async (org) => {
+  try {
+    await authStore.impersonate(org.id);
+    showToast(`تم فتح منشأة: ${org.name}`);
+    router.push('/dashboard');
+  } catch (err) {
+    showToast(err.response?.data?.error || 'فشل فتح المنشأة', 'error');
   }
 };
 
