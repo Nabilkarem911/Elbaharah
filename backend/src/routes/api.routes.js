@@ -14,13 +14,18 @@ const { Supplier, Purchase, PurchaseItem, FishType, DailySale, PosMachine, PosTr
 router.get('/me/org', auth, async (req, res, next) => {
   try {
     if (!req.user.organization_id) {
-      return res.json({ organization: null, branch: null, labels: {} });
+      return res.json({ organization: null, branch: null, labels: {}, branches: [] });
     }
     const org = await Organization.findByPk(req.user.organization_id);
     const branch = req.user.branch_id ? await Branch.findByPk(req.user.branch_id) : null;
+    const branches = await Branch.findAll({
+      where: { organization_id: req.user.organization_id, is_active: true },
+      order: [['is_main', 'DESC'], ['id', 'ASC']],
+    });
     res.json({
       organization: org,
       branch,
+      branches,
       labels: org?.labels || {},
     });
   } catch (err) { next(err); }

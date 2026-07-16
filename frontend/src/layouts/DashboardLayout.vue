@@ -157,8 +157,8 @@ const fetchOrgInfo = async () => {
     const { data } = await api.get('/me/org');
     orgLabels.value = data.labels || {};
     orgName.value = data.organization?.name || '';
-    if (data.organization?.branches) {
-      branches.value = data.organization.branches;
+    if (data.branches) {
+      branches.value = data.branches;
     }
   } catch (e) {
     // ignore — use defaults

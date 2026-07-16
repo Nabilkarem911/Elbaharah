@@ -12,8 +12,8 @@ function createCrudController(Model, modelName, includeAssoc = []) {
           where.organization_id = req.user.organization_id;
         }
 
-        // Auto-filter by branch_id if user has one
-        if (req.user && req.user.branch_id && Model.rawAttributes.branch_id) {
+        // Auto-filter by branch_id for non-admin users who have a branch_id
+        if (req.user && req.user.branch_id && req.user.role !== 'admin' && Model.rawAttributes.branch_id) {
           if (!where.branch_id) {
             where.branch_id = req.user.branch_id;
           }
@@ -74,8 +74,8 @@ function createCrudController(Model, modelName, includeAssoc = []) {
         if (req.user && req.user.role !== 'super_admin' && req.user.organization_id && Model.rawAttributes.organization_id) {
           data.organization_id = req.user.organization_id;
         }
-        // Auto-assign branch_id if model has it and user has one
-        if (req.user && req.user.branch_id && Model.rawAttributes.branch_id && !data.branch_id) {
+        // Auto-assign branch_id if model has it and non-admin user has one
+        if (req.user && req.user.branch_id && req.user.role !== 'admin' && Model.rawAttributes.branch_id && !data.branch_id) {
           data.branch_id = req.user.branch_id;
         }
         const item = await Model.create(data);
