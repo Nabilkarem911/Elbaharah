@@ -418,12 +418,81 @@ router.post('/users', auth, role('admin'), [
   body('full_name').trim().notEmpty().withMessage('الاسم الكامل مطلوب'),
   body('password_hash').isLength({ min: 6 }).withMessage('كلمة المرور 6 أحرف على الأقل'),
   body('role').isIn(['admin', 'manager', 'cashier', 'accountant']).withMessage('دور غير صحيح'),
-], validate, userCtrl.create);
+], validate, async (req, res, next) => {
+  try {
+    const data = { ...req.body };
+    if (req.user.organization_id) data.organization_id = req.user.organization_id;
+    if (!data.branch_id && req.user.branch_id) data.branch_id = req.user.branch_id;
+    const item = await User.create(data);
+    res.status(201).json(item);
+  } catch (err) { next(err); }
+});
 router.put('/users/:id', auth, role('admin'), [
   body('full_name').trim().notEmpty().withMessage('الاسم الكامل مطلوب'),
   body('role').isIn(['admin', 'manager', 'cashier', 'accountant']).withMessage('دور غير صحيح'),
-], validate, userCtrl.update);
+], validate, async (req, res, next) => {
+  try {
+    const where = { id: req.params.id };
+    if (req.user.organization_id) where.organization_id = req.user.organization_id;
+    const item = await User.findOne({ where });
+    if (!item) return res.status(404).json({ error: 'مستخدم غير موجود' });
+    const updates = { ...req.body };
+    if (!updates.password_hash) delete updates.password_hash;
+    await item.update(updates);
+    res.json(item);
+  } catch (err) { next(err); }
+});
 router.delete('/users/:id', auth, role('admin'), userCtrl.remove);
+
+// Branches (org admin manages their own branches)
+router.get('/branches', auth, role('admin'), async (req, res, next) => {
+  try {
+    const where = {};
+    if (req.user.organization_id) where.organization_id = req.user.organization_id;
+    const branches = await Branch.findAll({
+      where,
+      order: [['is_main', 'DESC'], ['id', 'ASC']],
+    });
+    res.json(branches);
+  } catch (err) { next(err); }
+});
+router.post('/branches', auth, role('admin'), [
+  body('name').trim().notEmpty().withMessage('اسم الفرع مطلوب'),
+], validate, async (req, res, next) => {
+  try {
+    if (!req.user.organization_id) return res.status(400).json({ error: 'لا توجد منشأة مرتبطة' });
+    const branch = await Branch.create({
+      organization_id: req.user.organization_id,
+      name: req.body.name,
+      phone: req.body.phone,
+      address: req.body.address,
+    });
+    res.status(201).json(branch);
+  } catch (err) { next(err); }
+});
+router.put('/branches/:id', auth, role('admin'), [
+  body('name').trim().notEmpty().withMessage('اسم الفرع مطلوب'),
+], validate, async (req, res, next) => {
+  try {
+    const where = { id: req.params.id };
+    if (req.user.organization_id) where.organization_id = req.user.organization_id;
+    const branch = await Branch.findOne({ where });
+    if (!branch) return res.status(404).json({ error: 'الفرع غير موجود' });
+    await branch.update({ name: req.body.name, phone: req.body.phone, address: req.body.address, is_active: req.body.is_active });
+    res.json(branch);
+  } catch (err) { next(err); }
+});
+router.delete('/branches/:id', auth, role('admin'), async (req, res, next) => {
+  try {
+    const where = { id: req.params.id };
+    if (req.user.organization_id) where.organization_id = req.user.organization_id;
+    const branch = await Branch.findOne({ where });
+    if (!branch) return res.status(404).json({ error: 'الفرع غير موجود' });
+    if (branch.is_main) return res.status(400).json({ error: 'لا يمكن حذف الفرع الرئيسي' });
+    await branch.destroy();
+    res.json({ message: 'تم حذف الفرع بنجاح' });
+  } catch (err) { next(err); }
+});
 
 // Settings
 const settingCtrl = createCrud(Setting, 'إعدادات');

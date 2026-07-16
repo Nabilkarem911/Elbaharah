@@ -56,6 +56,7 @@ const routes = [
       { path: 'reports/waste', name: 'report-waste', component: () => import('../views/reports/WasteReportView.vue') },
       { path: 'reports/tax', name: 'report-tax', component: () => import('../views/reports/TaxReportView.vue') },
       { path: 'users', name: 'users', component: () => import('../views/users/UsersListView.vue') },
+      { path: 'branches', name: 'branches', component: () => import('../views/branches/BranchesView.vue') },
       { path: 'settings', name: 'settings', component: () => import('../views/settings/SettingsView.vue') },
     ],
   },

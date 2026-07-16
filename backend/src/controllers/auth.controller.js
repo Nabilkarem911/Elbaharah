@@ -5,10 +5,16 @@ exports.login = async (req, res, next) => {
   try {
     const { username, password } = req.body;
     if (!username || !password) {
-      return res.status(400).json({ error: 'يرجى إدخال اسم المستخدم وكلمة المرور' });
+      return res.status(400).json({ error: 'يرجى إدخال اسم المستخدم أو رقم الهاتف وكلمة المرور' });
     }
+    const { Op } = require('sequelize');
     const user = await User.findOne({
-      where: { username },
+      where: {
+        [Op.or]: [
+          { username },
+          { phone: username },
+        ],
+      },
       include: [
         { model: Organization, as: 'organization' },
         { model: Branch, as: 'branch' },

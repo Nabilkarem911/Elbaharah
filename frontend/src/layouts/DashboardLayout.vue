@@ -189,6 +189,7 @@ const navItems = computed(() => {
     { path: '/reports', label: 'التقارير', icon: FileText },
   ];
   if (auth.isAdmin) {
+    items.push({ path: '/branches', label: 'الفروع', icon: GitBranch });
     items.push({ path: '/users', label: 'المستخدمين', icon: User });
     items.push({ path: '/settings', label: 'الإعدادات', icon: Settings });
   }
