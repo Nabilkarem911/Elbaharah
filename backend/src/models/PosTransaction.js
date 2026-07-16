@@ -7,6 +7,11 @@ const PosTransaction = sequelize.define('PosTransaction', {
     primaryKey: true,
     autoIncrement: true,
   },
+  organization_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: { model: 'organizations', key: 'id' },
+  },
   pos_machine_id: {
     type: DataTypes.INTEGER,
     allowNull: false,

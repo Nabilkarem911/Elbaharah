@@ -7,6 +7,11 @@ const DailySaleChannel = sequelize.define('DailySaleChannel', {
     primaryKey: true,
     autoIncrement: true,
   },
+  organization_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: { model: 'organizations', key: 'id' },
+  },
   daily_sale_id: {
     type: DataTypes.INTEGER,
     allowNull: false,

@@ -7,6 +7,11 @@ const CreditSale = sequelize.define('CreditSale', {
     primaryKey: true,
     autoIncrement: true,
   },
+  organization_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: { model: 'organizations', key: 'id' },
+  },
   credit_account_id: {
     type: DataTypes.INTEGER,
     allowNull: false,

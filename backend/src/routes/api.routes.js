@@ -67,6 +67,7 @@ router.post('/purchases', auth, role('admin', 'manager'), [
     if (items && items.length) {
       for (const item of items) {
         item.purchase_id = purchase.id;
+        item.organization_id = req.user.organization_id;
         await PurchaseItem.create(item);
       }
     }
@@ -92,6 +93,7 @@ router.put('/purchases/:id', auth, role('admin', 'manager'), [
       await PurchaseItem.destroy({ where: { purchase_id: purchase.id } });
       for (const item of items) {
         item.purchase_id = purchase.id;
+        item.organization_id = req.user.organization_id;
         await PurchaseItem.create(item);
       }
       const totalWeight = items.reduce((s, i) => s + parseFloat(i.weight || 0), 0);
@@ -147,6 +149,7 @@ router.post('/purchases/batch', auth, role('admin', 'manager'), async (req, res,
         await PurchaseItem.create({
           ...item,
           purchase_id: purchase.id,
+          organization_id: req.user.organization_id,
         });
       }
       results.push(purchase);
@@ -674,14 +677,19 @@ router.post('/purchase-custody', auth, role('admin', 'manager'), [
   body('amount').isFloat({ min: 0.01 }).withMessage('المبلغ مطلوب'),
   body('transaction_date').notEmpty().withMessage('التاريخ مطلوب'),
 ], validate, async (req, res, next) => {
+  const t = await require('../models').sequelize.transaction();
   try {
     const record = await PurchaseCustody.create({
       ...req.body,
       organization_id: req.user.organization_id,
       created_by: req.user.id,
-    });
+    }, { transaction: t });
+    await t.commit();
     res.status(201).json(record);
-  } catch (err) { next(err); }
+  } catch (err) {
+    await t.rollback();
+    next(err);
+  }
 });
 
 router.delete('/purchase-custody/:id', auth, role('admin', 'manager'), async (req, res, next) => {

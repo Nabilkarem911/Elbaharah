@@ -14,7 +14,7 @@ const Setting = sequelize.define('Setting', {
   },
   restaurant_name: {
     type: DataTypes.STRING(100),
-    defaultValue: 'بيت الأسماك',
+    allowNull: true,
   },
   tax_rate: {
     type: DataTypes.DECIMAL(5, 2),

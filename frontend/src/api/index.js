@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { resetOrgLabels } from '../composables/useOrgLabels';
 
 const api = axios.create({
   baseURL: '/api',
@@ -21,6 +22,9 @@ api.interceptors.response.use(
       if (token) {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
+        localStorage.removeItem('super_admin_token');
+        localStorage.removeItem('super_admin_user');
+        resetOrgLabels();
       }
       if (window.location.pathname !== '/login') {
         window.location.href = '/login';

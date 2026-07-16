@@ -46,14 +46,17 @@ const PurchaseCustody = sequelize.define('PurchaseCustody', {
 }, {
   tableName: 'purchase_custody',
   hooks: {
-    beforeCreate: async (record) => {
+    beforeCreate: async (record, options) => {
       const { Op } = require('sequelize');
+      const transaction = options.transaction;
       const last = await PurchaseCustody.findOne({
         where: {
           organization_id: record.organization_id || null,
           branch_id: record.branch_id || null,
         },
         order: [['id', 'DESC']],
+        transaction,
+        lock: transaction ? transaction.LOCK.UPDATE : undefined,
       });
       const prevBalance = last ? parseFloat(last.balance_after) : 0;
       const amount = parseFloat(record.amount);
