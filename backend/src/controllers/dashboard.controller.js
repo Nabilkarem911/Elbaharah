@@ -2,15 +2,24 @@ const { DailySale, Purchase, Expense, DeliveryOrder, Supplier, PurchaseItem, Fis
   CreditSale, CreditAccount, FishInventory, Setting, CancelledInvoice, OtherSale } = require('../models');
 const { Op } = require('sequelize');
 
+const orgFilter = (req) => {
+  const where = {};
+  if (req.user && req.user.role !== 'super_admin' && req.user.organization_id) {
+    where.organization_id = req.user.organization_id;
+  }
+  return where;
+};
+
 exports.today = async (req, res, next) => {
   try {
     const today = new Date().toISOString().split('T')[0];
-    const sale = await DailySale.findOne({ where: { sale_date: today } });
+    const org = orgFilter(req);
+    const sale = await DailySale.findOne({ where: { ...org, sale_date: today } });
     const purchases = await Purchase.findAll({
-      where: { purchase_date: today },
+      where: { ...org, purchase_date: today },
       include: [{ model: PurchaseItem, as: 'items' }],
     });
-    const expenses = await Expense.findAll({ where: { expense_date: today } });
+    const expenses = await Expense.findAll({ where: { ...org, expense_date: today } });
     const totalPurchases = purchases.reduce((sum, p) => sum + parseFloat(p.total_amount), 0);
     const totalExpenses = expenses.reduce((sum, e) => sum + parseFloat(e.amount), 0);
     const totalSales = sale ? parseFloat(sale.net_sales) : 0;
@@ -35,14 +44,15 @@ exports.month = async (req, res, next) => {
     const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
     const startStr = start.toISOString().split('T')[0];
     const endStr = end.toISOString().split('T')[0];
+    const org = orgFilter(req);
     const sales = await DailySale.findAll({
-      where: { sale_date: { [Op.between]: [startStr, endStr] } },
+      where: { ...org, sale_date: { [Op.between]: [startStr, endStr] } },
     });
     const purchases = await Purchase.findAll({
-      where: { purchase_date: { [Op.between]: [startStr, endStr] } },
+      where: { ...org, purchase_date: { [Op.between]: [startStr, endStr] } },
     });
     const expenses = await Expense.findAll({
-      where: { expense_date: { [Op.between]: [startStr, endStr] } },
+      where: { ...org, expense_date: { [Op.between]: [startStr, endStr] } },
     });
     const totalSales = sales.reduce((s, d) => s + parseFloat(d.net_sales), 0);
     const totalPurchases = purchases.reduce((s, p) => s + parseFloat(p.total_amount), 0);
@@ -66,9 +76,10 @@ exports.charts = async (req, res, next) => {
     const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
     const startStr = start.toISOString().split('T')[0];
     const endStr = end.toISOString().split('T')[0];
+    const org = orgFilter(req);
 
     const sales = await DailySale.findAll({
-      where: { sale_date: { [Op.between]: [startStr, endStr] } },
+      where: { ...org, sale_date: { [Op.between]: [startStr, endStr] } },
       order: [['sale_date', 'ASC']],
     });
 
@@ -93,7 +104,7 @@ exports.charts = async (req, res, next) => {
     });
 
     const topSuppliers = await Purchase.findAll({
-      where: { purchase_date: { [Op.between]: [startStr, endStr] } },
+      where: { ...org, purchase_date: { [Op.between]: [startStr, endStr] } },
       include: [{ model: Supplier, as: 'supplier' }],
     });
     const supplierMap = {};
@@ -124,12 +135,13 @@ exports.insights = async (req, res, next) => {
     const prevEnd = new Date(now.getFullYear(), now.getMonth(), 0);
     const prevStartStr = prevStart.toISOString().split('T')[0];
     const prevEndStr = prevEnd.toISOString().split('T')[0];
+    const org = orgFilter(req);
 
-    const sales = await DailySale.findAll({ where: { sale_date: { [Op.between]: [startStr, endStr] } } });
-    const prevSales = await DailySale.findAll({ where: { sale_date: { [Op.between]: [prevStartStr, prevEndStr] } } });
+    const sales = await DailySale.findAll({ where: { ...org, sale_date: { [Op.between]: [startStr, endStr] } } });
+    const prevSales = await DailySale.findAll({ where: { ...org, sale_date: { [Op.between]: [prevStartStr, prevEndStr] } } });
 
     const purchases = await Purchase.findAll({
-      where: { purchase_date: { [Op.between]: [startStr, endStr] } },
+      where: { ...org, purchase_date: { [Op.between]: [startStr, endStr] } },
       include: [{ model: Supplier, as: 'supplier' }, { model: PurchaseItem, as: 'items', include: [{ model: FishType, as: 'fishType' }] }],
     });
 
@@ -137,7 +149,7 @@ exports.insights = async (req, res, next) => {
     const prevTotalSales = prevSales.reduce((s, d) => s + parseFloat(d.net_sales), 0);
     const totalPurchases = purchases.reduce((s, p) => s + parseFloat(p.total_amount), 0);
 
-    const prevPurchases = await Purchase.findAll({ where: { purchase_date: { [Op.between]: [prevStartStr, prevEndStr] } } });
+    const prevPurchases = await Purchase.findAll({ where: { ...org, purchase_date: { [Op.between]: [prevStartStr, prevEndStr] } } });
     const prevTotalPurchases = prevPurchases.reduce((s, p) => s + parseFloat(p.total_amount), 0);
 
     const salesGrowth = prevTotalSales > 0 ? ((totalSales - prevTotalSales) / prevTotalSales) * 100 : 0;
@@ -184,10 +196,11 @@ exports.insights = async (req, res, next) => {
 exports.notifications = async (req, res, next) => {
   try {
     const today = new Date().toISOString().split('T')[0];
+    const org = orgFilter(req);
     const alerts = [];
 
     const overdueSales = await CreditSale.findAll({
-      where: { is_paid: false, due_date: { [Op.lt]: today } },
+      where: { ...org, is_paid: false, due_date: { [Op.lt]: today } },
       include: [{ model: CreditAccount, as: 'account' }],
     });
     if (overdueSales.length > 0) {
@@ -202,8 +215,8 @@ exports.notifications = async (req, res, next) => {
       });
     }
 
-    const unpaidAccounts = await CreditAccount.findAll({ where: { total_balance: { [Op.gt]: 0 } } });
-    const setting = await Setting.findOne();
+    const unpaidAccounts = await CreditAccount.findAll({ where: { ...org, total_balance: { [Op.gt]: 0 } } });
+    const setting = await Setting.findOne({ where: org });
     const creditLimit = setting ? parseFloat(setting.credit_limit || 0) : 0;
     if (creditLimit > 0) {
       const overLimit = unpaidAccounts.filter(a => parseFloat(a.total_balance) > creditLimit);
@@ -220,7 +233,7 @@ exports.notifications = async (req, res, next) => {
     }
 
     const lowInventory = await FishInventory.findAll({
-      where: { closing_balance_kg: { [Op.lt]: 10 } },
+      where: { ...org, closing_balance_kg: { [Op.lt]: 10 } },
       include: [{ model: FishType, as: 'fishType' }],
     });
     if (lowInventory.length > 0) {
@@ -249,6 +262,7 @@ exports.dailyReport = async (req, res, next) => {
     const yesterdayStr = yesterday.toISOString().split('T')[0];
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
     const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+    const org = orgFilter(req);
 
     // Helper: aggregate a daily sale row
     const emptySale = {
@@ -257,9 +271,9 @@ exports.dailyReport = async (req, res, next) => {
       net_sales: 0, surplus_deficit: 0, mada: 0, visa: 0, mastercard: 0, bank_transfer: 0,
     };
 
-    const todaySale = await DailySale.findOne({ where: { sale_date: todayStr } });
-    const yesterdaySale = await DailySale.findOne({ where: { sale_date: yesterdayStr } });
-    const monthSales = await DailySale.findAll({ where: { sale_date: { [Op.between]: [monthStart, monthEnd] } } });
+    const todaySale = await DailySale.findOne({ where: { ...org, sale_date: todayStr } });
+    const yesterdaySale = await DailySale.findOne({ where: { ...org, sale_date: yesterdayStr } });
+    const monthSales = await DailySale.findAll({ where: { ...org, sale_date: { [Op.between]: [monthStart, monthEnd] } } });
 
     const sumSales = (sales) => {
       if (Array.isArray(sales)) {
@@ -279,9 +293,9 @@ exports.dailyReport = async (req, res, next) => {
     const monthSalesAgg = sumSales(monthSales);
 
     // Cancelled invoices
-    const todayCancelled = await CancelledInvoice.findAll({ where: { invoice_date: todayStr } });
-    const yesterdayCancelled = await CancelledInvoice.findAll({ where: { invoice_date: yesterdayStr } });
-    const monthCancelled = await CancelledInvoice.findAll({ where: { invoice_date: { [Op.between]: [monthStart, monthEnd] } } });
+    const todayCancelled = await CancelledInvoice.findAll({ where: { ...org, invoice_date: todayStr } });
+    const yesterdayCancelled = await CancelledInvoice.findAll({ where: { ...org, invoice_date: yesterdayStr } });
+    const monthCancelled = await CancelledInvoice.findAll({ where: { ...org, invoice_date: { [Op.between]: [monthStart, monthEnd] } } });
 
     const sumCancelled = (arr) => arr.reduce((s, c) => s + parseFloat(c.invoice_amount), 0);
     todaySales.cancelled = sumCancelled(todayCancelled);
@@ -289,9 +303,9 @@ exports.dailyReport = async (req, res, next) => {
     monthSalesAgg.cancelled = sumCancelled(monthCancelled);
 
     // Other sales
-    const todayOther = await OtherSale.findAll({ where: { sale_date: todayStr } });
-    const yesterdayOther = await OtherSale.findAll({ where: { sale_date: yesterdayStr } });
-    const monthOther = await OtherSale.findAll({ where: { sale_date: { [Op.between]: [monthStart, monthEnd] } } });
+    const todayOther = await OtherSale.findAll({ where: { ...org, sale_date: todayStr } });
+    const yesterdayOther = await OtherSale.findAll({ where: { ...org, sale_date: yesterdayStr } });
+    const monthOther = await OtherSale.findAll({ where: { ...org, sale_date: { [Op.between]: [monthStart, monthEnd] } } });
     const sumOther = (arr) => arr.reduce((s, o) => s + parseFloat(o.total), 0);
     todaySales.other_sales_total = sumOther(todayOther);
     yesterdaySales.other_sales_total = sumOther(yesterdayOther);
@@ -300,7 +314,7 @@ exports.dailyReport = async (req, res, next) => {
     // Fish purchases by type
     const getFishData = async (startDate, endDate) => {
       const purchases = await Purchase.findAll({
-        where: { purchase_date: { [Op.between]: [startDate, endDate] } },
+        where: { ...org, purchase_date: { [Op.between]: [startDate, endDate] } },
         include: [{ model: PurchaseItem, as: 'items', include: [{ model: FishType, as: 'fishType' }] }],
       });
       const fishMap = {};
@@ -325,12 +339,12 @@ exports.dailyReport = async (req, res, next) => {
     const monthFish = await getFishData(monthStart, monthEnd);
 
     // All fish types (for column headers)
-    const allFishTypes = await FishType.findAll({ order: [['name', 'ASC']] });
+    const allFishTypes = await FishType.findAll({ where: org, order: [['name', 'ASC']] });
 
     // Suppliers summary
     const getSupplierData = async (startDate, endDate) => {
       const purchases = await Purchase.findAll({
-        where: { purchase_date: { [Op.between]: [startDate, endDate] } },
+        where: { ...org, purchase_date: { [Op.between]: [startDate, endDate] } },
         include: [{ model: Supplier, as: 'supplier' }],
       });
       const supplierMap = {};
@@ -349,7 +363,7 @@ exports.dailyReport = async (req, res, next) => {
 
     // Purchase totals
     const getPurchaseTotal = async (startDate, endDate) => {
-      const purchases = await Purchase.findAll({ where: { purchase_date: { [Op.between]: [startDate, endDate] } } });
+      const purchases = await Purchase.findAll({ where: { ...org, purchase_date: { [Op.between]: [startDate, endDate] } } });
       return purchases.reduce((s, p) => s + parseFloat(p.total_amount), 0);
     };
 

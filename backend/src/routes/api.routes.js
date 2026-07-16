@@ -62,6 +62,7 @@ router.post('/purchases', auth, role('admin', 'manager'), [
   try {
     const { items, ...purchaseData } = req.body;
     purchaseData.created_by = req.user.id;
+    if (req.user.organization_id) purchaseData.organization_id = req.user.organization_id;
     const purchase = await Purchase.create(purchaseData);
     if (items && items.length) {
       for (const item of items) {
@@ -82,7 +83,9 @@ router.put('/purchases/:id', auth, role('admin', 'manager'), [
 ], validate, async (req, res, next) => {
   try {
     const { items, ...purchaseData } = req.body;
-    const purchase = await Purchase.findByPk(req.params.id);
+    const where = { id: req.params.id };
+    if (req.user.organization_id) where.organization_id = req.user.organization_id;
+    const purchase = await Purchase.findOne({ where });
     if (!purchase) return res.status(404).json({ error: 'الفاتورة غير موجودة' });
     await purchase.update(purchaseData);
     if (items) {
@@ -104,8 +107,10 @@ router.delete('/purchases/:id', auth, role('admin'), purchaseCtrl.remove);
 router.get('/purchases/next-invoice', auth, async (req, res, next) => {
   try {
     const { Op } = require('sequelize');
+    const where = { invoice_number: { [Op.like]: 'PUR-%' } };
+    if (req.user.organization_id) where.organization_id = req.user.organization_id;
     const lastPurchase = await Purchase.findOne({
-      where: { invoice_number: { [Op.like]: 'PUR-%' } },
+      where,
       order: [['id', 'DESC']],
     });
     let nextNum = 1;
@@ -133,6 +138,7 @@ router.post('/purchases/batch', auth, role('admin', 'manager'), async (req, res,
         purchase_date: purchase_date || new Date().toISOString().split('T')[0],
         payment_method: payment_method || 'cash',
         notes: notes || '',
+        organization_id: req.user.organization_id,
         created_by: req.user.id,
         total_weight: row.items.reduce((s, i) => s + parseFloat(i.weight || 0), 0),
         total_amount: row.items.reduce((s, i) => s + parseFloat(i.total_price || 0), 0),
@@ -153,7 +159,10 @@ router.post('/purchases/batch', auth, role('admin', 'manager'), async (req, res,
 router.get('/purchases/invoices', auth, async (req, res, next) => {
   try {
     const { Op, literal } = require('sequelize');
+    const where = {};
+    if (req.user.organization_id) where.organization_id = req.user.organization_id;
     const purchases = await Purchase.findAll({
+      where,
       include: [
         { model: Supplier, as: 'supplier' },
         { model: PurchaseItem, as: 'items', include: [{ model: FishType, as: 'fishType' }] },
@@ -211,11 +220,13 @@ router.get('/purchases/invoices', auth, async (req, res, next) => {
 // Get full invoice by first purchase id (aggregates all purchases with same invoice_number)
 router.get('/purchases/invoice/:id', auth, async (req, res, next) => {
   try {
-    const basePurchase = await Purchase.findByPk(req.params.id);
+    const baseWhere = { id: req.params.id };
+    if (req.user.organization_id) baseWhere.organization_id = req.user.organization_id;
+    const basePurchase = await Purchase.findOne({ where: baseWhere });
     if (!basePurchase) return res.status(404).json({ error: 'الفاتورة غير موجودة' });
 
     const purchases = await Purchase.findAll({
-      where: { invoice_number: basePurchase.invoice_number },
+      where: { invoice_number: basePurchase.invoice_number, ...baseWhere },
       include: [
         { model: Supplier, as: 'supplier' },
         { model: PurchaseItem, as: 'items', include: [{ model: FishType, as: 'fishType' }] },
@@ -262,8 +273,10 @@ router.get('/purchases/invoice/:id', auth, async (req, res, next) => {
 // Delete entire invoice by invoice_number
 router.delete('/purchases/invoice/:invoiceNumber', auth, role('admin', 'manager'), async (req, res, next) => {
   try {
+    const where = { invoice_number: req.params.invoiceNumber };
+    if (req.user.organization_id) where.organization_id = req.user.organization_id;
     const purchases = await Purchase.findAll({
-      where: { invoice_number: req.params.invoiceNumber },
+      where,
     });
     if (!purchases.length) return res.status(404).json({ error: 'الفاتورة غير موجودة' });
     for (const p of purchases) {
@@ -342,7 +355,9 @@ router.delete('/credit/sales/:id', auth, role('admin', 'manager'), creditSaleCtr
 // Credit Settlement — creates a paid CreditSale to properly trigger model hooks
 router.post('/credit/accounts/:id/settle', auth, role('admin', 'manager'), async (req, res, next) => {
   try {
-    const account = await CreditAccount.findByPk(req.params.id);
+    const where = { id: req.params.id };
+    if (req.user.organization_id) where.organization_id = req.user.organization_id;
+    const account = await CreditAccount.findOne({ where });
     if (!account) return res.status(404).json({ error: 'الحساب غير موجود' });
 
     const { payment_amount, payment_date } = req.body;
@@ -504,9 +519,11 @@ const settingCtrl = createCrud(Setting, 'إعدادات');
 router.get('/settings', auth, settingCtrl.list);
 router.put('/settings', auth, role('admin'), async (req, res, next) => {
   try {
-    const setting = await Setting.findOne();
+    const where = {};
+    if (req.user.organization_id) where.organization_id = req.user.organization_id;
+    const setting = await Setting.findOne({ where });
     if (!setting) {
-      const newSetting = await Setting.create(req.body);
+      const newSetting = await Setting.create({ ...req.body, organization_id: req.user.organization_id });
       return res.json(newSetting);
     }
     await setting.update(req.body);
@@ -528,9 +545,11 @@ router.get('/fish-waste/avg-cost/:fishTypeId', auth, async (req, res, next) => {
     const now = new Date();
     const start = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
     const end = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+    const purchaseWhere = { purchase_date: { [require('sequelize').Op.between]: [start, end] } };
+    if (req.user.organization_id) purchaseWhere.organization_id = req.user.organization_id;
     const items = await PurchaseItem.findAll({
       where: { fish_type_id: req.params.fishTypeId },
-      include: [{ model: Purchase, as: 'purchase', where: { purchase_date: { [require('sequelize').Op.between]: [start, end] } }, required: true }],
+      include: [{ model: Purchase, as: 'purchase', where: purchaseWhere, required: true }],
     });
     if (!items.length) return res.json({ avg_cost: 0, count: 0 });
     const totalWeight = items.reduce((s, i) => s + parseFloat(i.weight), 0);
@@ -554,6 +573,7 @@ router.get('/fish-inventory', auth, async (req, res, next) => {
   try {
     const { Op } = require('sequelize');
     const where = {};
+    if (req.user.organization_id) where.organization_id = req.user.organization_id;
     if (req.query.month) {
       where.month_year = req.query.month;
     }
@@ -576,10 +596,11 @@ router.post('/fish-inventory/opening', auth, role('admin', 'manager'), async (re
     for (const item of items) {
       if (!item.fish_type_id) continue;
       const [record, created] = await FishInventory.findOrCreate({
-        where: { fish_type_id: item.fish_type_id, month_year },
+        where: { fish_type_id: item.fish_type_id, month_year, organization_id: req.user.organization_id },
         defaults: {
           fish_type_id: item.fish_type_id,
           month_year,
+          organization_id: req.user.organization_id,
           opening_balance_kg: Number(item.opening_balance_kg || 0),
           opening_balance_cost: Number(item.opening_balance_cost || 0),
           opening_balance_value: Number(item.opening_balance_value || 0),
@@ -608,10 +629,11 @@ router.post('/fish-inventory/closing', auth, role('admin', 'manager'), async (re
     for (const item of items) {
       if (!item.fish_type_id) continue;
       const [record, created] = await FishInventory.findOrCreate({
-        where: { fish_type_id: item.fish_type_id, month_year },
+        where: { fish_type_id: item.fish_type_id, month_year, organization_id: req.user.organization_id },
         defaults: {
           fish_type_id: item.fish_type_id,
           month_year,
+          organization_id: req.user.organization_id,
           closing_balance_kg: Number(item.closing_balance_kg || 0),
           closing_balance_cost: Number(item.closing_balance_cost || 0),
         },
@@ -633,6 +655,7 @@ router.get('/purchase-custody', auth, async (req, res, next) => {
   try {
     const { Op } = require('sequelize');
     const where = {};
+    if (req.user.organization_id) where.organization_id = req.user.organization_id;
     if (req.query.startDate && req.query.endDate) {
       where.transaction_date = { [Op.between]: [req.query.startDate, req.query.endDate] };
     }
@@ -654,6 +677,7 @@ router.post('/purchase-custody', auth, role('admin', 'manager'), [
   try {
     const record = await PurchaseCustody.create({
       ...req.body,
+      organization_id: req.user.organization_id,
       created_by: req.user.id,
     });
     res.status(201).json(record);
@@ -662,7 +686,9 @@ router.post('/purchase-custody', auth, role('admin', 'manager'), [
 
 router.delete('/purchase-custody/:id', auth, role('admin', 'manager'), async (req, res, next) => {
   try {
-    const record = await PurchaseCustody.findByPk(req.params.id);
+    const where = { id: req.params.id };
+    if (req.user.organization_id) where.organization_id = req.user.organization_id;
+    const record = await PurchaseCustody.findOne({ where });
     if (!record) return res.status(404).json({ error: 'السجل غير موجود' });
     await record.destroy();
     res.json({ message: 'تم الحذف' });
