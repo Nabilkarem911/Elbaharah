@@ -36,30 +36,32 @@
 </template>
 
 <script setup>
-import { reactive, inject } from 'vue';
+import { reactive, inject, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import {
   Wallet, Fish, Truck, Users, Receipt, TrendingUp, CreditCard, Clock, Calculator, ChevronLeft, Calendar, Trash2,
 } from 'lucide-vue-next';
 import PageHeader from '../../components/PageHeader.vue';
 import DateRangePicker from '../../components/DateRangePicker.vue';
+import { useOrgLabels } from '../../composables/useOrgLabels';
 
 const toast = inject('toast');
 const router = useRouter();
+const { L } = useOrgLabels();
 const dateRange = reactive({ start: '', end: '' });
 
-const reportTypes = [
+const reportTypes = computed(() => [
   { key: 'sales', title: 'تقرير المبيعات', desc: 'مبيعات يومية/شهرية بالتفصيل', icon: Wallet, bg: 'bg-primary-50', color: 'text-primary-500' },
-  { key: 'fish', title: 'تقرير الأسماك', desc: 'مشتريات، أسعار، أوزان', icon: Fish, bg: 'bg-gold/10', color: 'text-gold-dark' },
+  { key: 'fish', title: `تقرير ${L('product', 'الأسماك')}`, desc: 'مشتريات، أسعار، أوزان', icon: Fish, bg: 'bg-gold/10', color: 'text-gold-dark' },
   { key: 'delivery', title: 'تقرير التوصيل', desc: 'مبيعات كل تطبيق', icon: Truck, bg: 'bg-blue-50', color: 'text-blue-600' },
-  { key: 'suppliers', title: 'تقرير الدلالين', desc: 'حساب كل دلال', icon: Users, bg: 'bg-purple-50', color: 'text-purple-600' },
+  { key: 'suppliers', title: `تقرير ${L('suppliers', 'الدلالين')}`, desc: `حساب كل ${L('supplier', 'دلال')}`, icon: Users, bg: 'bg-purple-50', color: 'text-purple-600' },
   { key: 'expenses', title: 'تقرير المصروفات', desc: 'مصروفات بالتصنيف', icon: Receipt, bg: 'bg-red-50', color: 'text-red-600' },
   { key: 'profit', title: 'تقرير الأرباح', desc: 'صافي الربح', icon: TrendingUp, bg: 'bg-green-50', color: 'text-success' },
   { key: 'pos', title: 'تقرير الموازنات', desc: 'حركة كل ماكينة', icon: CreditCard, bg: 'bg-indigo-50', color: 'text-indigo-600' },
   { key: 'credit', title: 'تقرير الآجل', desc: 'مستحقات ومسدد', icon: Clock, bg: 'bg-yellow-50', color: 'text-yellow-600' },
   { key: 'tax', title: 'تقرير الضريبة', desc: 'ضريبة القيمة المضافة', icon: Calculator, bg: 'bg-gray-100', color: 'text-gray-600' },
-  { key: 'waste', title: 'تقرير الهدر', desc: 'هدر الأسماك وأسبابه', icon: Trash2, bg: 'bg-red-50', color: 'text-red-600' },
-];
+  { key: 'waste', title: `تقرير ${L('product_waste', 'الهدر')}`, desc: `${L('product_waste', 'هدر الأسماك')} وأسبابه`, icon: Trash2, bg: 'bg-red-50', color: 'text-red-600' },
+]);
 
 const generateReport = (key) => {
   const query = {};

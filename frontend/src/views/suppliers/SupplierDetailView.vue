@@ -4,7 +4,7 @@
       <router-link to="/suppliers" class="p-2 rounded-lg hover:bg-primary-50 text-primary-400">
         <ArrowRight class="w-5 h-5" />
       </router-link>
-      <h2 class="text-xl font-bold text-primary-500">{{ supplier?.name || 'تفاصيل الدلال' }}</h2>
+      <h2 class="text-xl font-bold text-primary-500">{{ supplier?.name || `تفاصيل ${L('supplier', 'الدلال')}` }}</h2>
     </div>
 
     <!-- Info card -->
@@ -34,8 +34,10 @@ import { useRoute } from 'vue-router';
 import { ArrowRight, Eye } from 'lucide-vue-next';
 import DataTable from '../../components/DataTable.vue';
 import api from '../../api';
+import { useOrgLabels } from '../../composables/useOrgLabels';
 
 const toast = inject('toast');
+const { L } = useOrgLabels();
 const route = useRoute();
 const supplier = ref(null);
 const purchases = ref([]);

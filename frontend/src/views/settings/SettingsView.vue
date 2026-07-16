@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-6">
-    <PageHeader title="الإعدادات" subtitle="إدارة الأنواع، الدلالين، الأجهزة، التطبيقات، التصنيفات" />
+    <PageHeader title="الإعدادات" :subtitle="`إدارة ${L('product_type', 'أنواع السمك')}, ${L('suppliers', 'الدلالين')}, الأجهزة, التطبيقات, التصنيفات`" />
 
     <!-- Tabs -->
     <div class="flex flex-wrap gap-2">
@@ -118,7 +118,7 @@
     <!-- General Settings -->
     <div v-if="activeTab === 'general'" class="card p-6 space-y-4">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div><label class="label">اسم المطعم</label><input v-model="settings.restaurant_name" class="input" /></div>
+        <div><label class="label">اسم المنشأة</label><input v-model="settings.restaurant_name" class="input" /></div>
         <div><label class="label">رقم الهاتف</label><input v-model="settings.phone" class="input" /></div>
         <div><label class="label">نسبة الضريبة %</label><input type="number" step="0.01" v-model="settings.tax_rate" class="input tabular-nums" /></div>
         <div><label class="label">العملة</label><input v-model="settings.currency" class="input" /></div>
@@ -132,22 +132,24 @@
 </template>
 
 <script setup>
-import { ref, reactive, inject, onMounted } from 'vue';
+import { ref, reactive, inject, onMounted, computed } from 'vue';
 import { Plus, Trash2, Power, Pencil, Loader2 } from 'lucide-vue-next';
 import PageHeader from '../../components/PageHeader.vue';
 import DataTable from '../../components/DataTable.vue';
 import api from '../../api';
+import { useOrgLabels } from '../../composables/useOrgLabels';
 
 const toast = inject('toast');
+const { L } = useOrgLabels();
 
-const tabs = [
-  { key: 'fish', label: 'أنواع السمك' },
+const tabs = computed(() => [
+  { key: 'fish', label: L('product_type', 'أنواع السمك') },
   { key: 'pos', label: 'أجهزة الدفع' },
   { key: 'delivery', label: 'تطبيقات التوصيل' },
   { key: 'expenses', label: 'تصنيفات المصروفات' },
   { key: 'channels', label: 'قنوات البيع' },
   { key: 'general', label: 'إعدادات عامة' },
-];
+]);
 const activeTab = ref('fish');
 
 const fishTypes = ref([]);

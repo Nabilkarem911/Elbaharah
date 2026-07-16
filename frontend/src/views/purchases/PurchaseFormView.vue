@@ -39,10 +39,10 @@
           <thead>
             <tr class="bg-gray-50 border-b">
               <th class="px-2 py-2.5 text-right font-medium text-gray-500 whitespace-nowrap w-8">#</th>
-              <th class="px-2 py-2.5 text-right font-medium text-gray-500 whitespace-nowrap w-24">رمز البائع</th>
-              <th class="px-2 py-2.5 text-right font-medium text-gray-500 whitespace-nowrap">اسم البائع</th>
-              <th class="px-2 py-2.5 text-right font-medium text-gray-500 whitespace-nowrap w-24">رمز السمك</th>
-              <th class="px-2 py-2.5 text-right font-medium text-gray-500 whitespace-nowrap">نوع السمك</th>
+              <th class="px-2 py-2.5 text-right font-medium text-gray-500 whitespace-nowrap w-24">رمز {{ L('supplier', 'البائع') }}</th>
+              <th class="px-2 py-2.5 text-right font-medium text-gray-500 whitespace-nowrap">اسم {{ L('supplier', 'البائع') }}</th>
+              <th class="px-2 py-2.5 text-right font-medium text-gray-500 whitespace-nowrap w-24">رمز {{ L('product', 'السمك') }}</th>
+              <th class="px-2 py-2.5 text-right font-medium text-gray-500 whitespace-nowrap">{{ L('product_type', 'نوع السمك') }}</th>
               <th class="px-2 py-2.5 text-right font-medium text-gray-500 whitespace-nowrap w-28">الوزن (كجم)</th>
               <th class="px-2 py-2.5 text-right font-medium text-gray-500 whitespace-nowrap w-28">سعر الشراء</th>
               <th class="px-2 py-2.5 text-right font-medium text-gray-500 whitespace-nowrap w-28">الإجمالي</th>
@@ -151,10 +151,12 @@ import { ref, reactive, computed, inject, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { ArrowRight, Plus, Trash2, Save, Loader2 } from 'lucide-vue-next';
 import api from '../../api';
+import { useOrgLabels } from '../../composables/useOrgLabels';
 
 const router = useRouter();
 const route = useRoute();
 const toast = inject('toast');
+const { L } = useOrgLabels();
 
 const suppliers = ref([]);
 const fishTypes = ref([]);

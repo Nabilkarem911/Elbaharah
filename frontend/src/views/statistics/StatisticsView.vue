@@ -8,7 +8,7 @@
         v-model:end-date="filterEndDate"
       />
       <select v-model="filterSupplier" class="input !py-1.5 text-sm w-auto">
-        <option value="">كل الدلالين</option>
+        <option value="">كل {{ L('suppliers', 'الدلالين') }}</option>
         <option v-for="s in suppliers" :key="s.id" :value="s.id">{{ s.name }}</option>
       </select>
       <select v-model="filterFish" class="input !py-1.5 text-sm w-auto">
@@ -27,19 +27,21 @@ import PageHeader from '../../components/PageHeader.vue';
 import DataTable from '../../components/DataTable.vue';
 import DateRangePicker from '../../components/DateRangePicker.vue';
 import api from '../../api';
+import { useOrgLabels } from '../../composables/useOrgLabels';
 
 const toast = inject('toast');
+const { L } = useOrgLabels();
 
-const columns = [
-  { key: 'supplier', label: 'الدلال' },
+const columns = computed(() => [
+  { key: 'supplier', label: L('supplier', 'الدلال') },
   { key: 'purchase_date', label: 'التاريخ', sortable: true },
-  { key: 'fishType', label: 'نوع السمك' },
+  { key: 'fishType', label: L('product_type', 'نوع السمك') },
   { key: 'count', label: 'عدد الأقلام', type: 'number', sortable: true },
   { key: 'totalWeight', label: 'إجمالي الوزن', type: 'weight', sortable: true },
   { key: 'totalPrice', label: 'إجمالي القيمة', type: 'currency', sortable: true },
   { key: 'avgPrice', label: 'متوسط السعر', type: 'currency' },
   { key: 'avgWeight', label: 'متوسط الوزن', type: 'weight' },
-];
+]);
 
 const items = ref([]);
 const suppliers = ref([]);

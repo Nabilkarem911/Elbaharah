@@ -1,9 +1,9 @@
 <template>
   <div class="space-y-6">
-    <PageHeader title="الدلالين" subtitle="إدارة موردي الأسماك">
+    <PageHeader :title="L('suppliers', 'الدلالين')" :subtitle="`إدارة ${L('supplier', 'الدلال')}ين`">
       <template #actions>
         <button @click="openModal()" class="btn-gold">
-          <Plus class="w-4 h-4" /> دلال جديد
+          <Plus class="w-4 h-4" /> {{ L('supplier', 'دلال') }} جديد
         </button>
       </template>
     </PageHeader>
@@ -32,7 +32,7 @@
       </template>
     </DataTable>
 
-    <Modal :show="showModal" :title="editing ? 'تعديل دلال' : 'دلال جديد'" @close="closeModal">
+    <Modal :show="showModal" :title="editing ? `تعديل ${L('supplier', 'دلال')}` : `${L('supplier', 'دلال')} جديد`" @close="closeModal">
       <div class="space-y-4">
         <div><label class="label">الاسم</label><input v-model="form.name" class="input" /></div>
         <div><label class="label">الرمز</label><input v-model="form.code" class="input" /></div>
@@ -54,8 +54,10 @@ import PageHeader from '../../components/PageHeader.vue';
 import DataTable from '../../components/DataTable.vue';
 import Modal from '../../components/Modal.vue';
 import api from '../../api';
+import { useOrgLabels } from '../../composables/useOrgLabels';
 
 const toast = inject('toast');
+const { L } = useOrgLabels();
 
 const columns = [
   { key: 'code', label: 'الرمز', sortable: true },
@@ -113,7 +115,7 @@ const save = async () => {
 };
 
 const confirmDelete = async (row) => {
-  if (!confirm(`حذف الدلال ${row.name}؟`)) return;
+  if (!confirm(`حذف ${L('supplier', 'الدلال')} ${row.name}؟`)) return;
   try {
     await api.delete(`/suppliers/${row.id}`);
     toast('تم الحذف');

@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-6">
-    <PageHeader title="تكلفة السمك" subtitle="تتبع أسعار وأنواع الأسماك من كل دلال" />
+    <PageHeader :title="L('product_cost', 'تكلفة السمك')" :subtitle="`تتبع أسعار وأنواع ${L('product', 'الأسماك')} من كل ${L('supplier', 'دلال')}`" />
 
     <div class="card p-4 flex flex-wrap gap-3">
       <select v-model="filterFish" class="input !py-1.5 text-sm w-auto">
@@ -8,7 +8,7 @@
         <option v-for="f in fishTypes" :key="f.id" :value="f.id">{{ f.name }}</option>
       </select>
       <select v-model="filterSupplier" class="input !py-1.5 text-sm w-auto">
-        <option value="">كل الدلالين</option>
+        <option value="">كل {{ L('suppliers', 'الدلالين') }}</option>
         <option v-for="s in suppliers" :key="s.id" :value="s.id">{{ s.name }}</option>
       </select>
     </div>
@@ -22,17 +22,19 @@ import { ref, computed, inject, onMounted } from 'vue';
 import PageHeader from '../../components/PageHeader.vue';
 import DataTable from '../../components/DataTable.vue';
 import api from '../../api';
+import { useOrgLabels } from '../../composables/useOrgLabels';
 
 const toast = inject('toast');
+const { L } = useOrgLabels();
 
-const columns = [
+const columns = computed(() => [
   { key: 'purchase_date', label: 'التاريخ', sortable: true },
-  { key: 'fishType', label: 'نوع السمك' },
-  { key: 'supplier', label: 'الدلال' },
+  { key: 'fishType', label: L('product_type', 'نوع السمك') },
+  { key: 'supplier', label: L('supplier', 'الدلال') },
   { key: 'weight', label: 'الوزن', type: 'weight', sortable: true },
   { key: 'price_per_kilo', label: 'سعر الكيلو', type: 'currency', sortable: true },
   { key: 'total_price', label: 'الإجمالي', type: 'currency', sortable: true },
-];
+]);
 
 const items = ref([]);
 const fishTypes = ref([]);

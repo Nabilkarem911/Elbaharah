@@ -4,7 +4,7 @@
       <router-link to="/reports" class="p-2 rounded-lg hover:bg-primary-50 text-primary-400">
         <ArrowRight class="w-5 h-5" />
       </router-link>
-      <PageHeader title="تقرير الأسماك" subtitle="مشتريات، أسعار، أوزان" />
+      <PageHeader :title="`تقرير ${L('product', 'الأسماك')}`" subtitle="مشتريات، أسعار، أوزان" />
     </div>
 
     <div class="card p-4">
@@ -38,24 +38,27 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, onMounted, computed } from 'vue';
 import { ArrowRight } from 'lucide-vue-next';
 import PageHeader from '../../components/PageHeader.vue';
 import DataTable from '../../components/DataTable.vue';
 import DateRangePicker from '../../components/DateRangePicker.vue';
 import api from '../../api';
+import { useOrgLabels } from '../../composables/useOrgLabels';
+
+const { L } = useOrgLabels();
 
 const data = ref(null);
 const loading = ref(false);
 const filters = reactive({ start: '', end: '' });
 
-const columns = [
-  { key: 'name', label: 'نوع السمك', sortable: true },
+const columns = computed(() => [
+  { key: 'name', label: L('product_type', 'نوع السمك'), sortable: true },
   { key: 'total_weight', label: 'إجمالي الوزن', type: 'weight', sortable: true },
   { key: 'total_amount', label: 'إجمالي المبلغ', type: 'currency', sortable: true },
   { key: 'avg_price', label: 'متوسط سعر الكيلو', type: 'currency', sortable: true },
   { key: 'purchases_count', label: 'عدد الفواتير', type: 'number' },
-];
+]);
 
 const fmt = (v) => Number(v || 0).toLocaleString('en-US', { minimumFractionDigits: 2 });
 

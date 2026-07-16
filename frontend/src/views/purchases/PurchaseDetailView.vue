@@ -73,7 +73,7 @@
                     <thead>
                       <tr class="bg-white border-b">
                         <th class="px-3 py-2 text-right font-medium text-gray-500 w-8">#</th>
-                        <th class="px-3 py-2 text-right font-medium text-gray-500">نوع السمك</th>
+                        <th class="px-3 py-2 text-right font-medium text-gray-500">{{ L('product_type', 'نوع السمك') }}</th>
                         <th class="px-3 py-2 text-right font-medium text-gray-500">الوزن (كجم)</th>
                         <th class="px-3 py-2 text-right font-medium text-gray-500">سعر الكيلو</th>
                         <th class="px-3 py-2 text-right font-medium text-gray-500">الإجمالي</th>
@@ -122,8 +122,10 @@ import { ref, computed, inject, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { ArrowRight, Printer, Pencil, Users, ChevronDown, ChevronLeft } from 'lucide-vue-next';
 import api from '../../api';
+import { useOrgLabels } from '../../composables/useOrgLabels';
 
 const toast = inject('toast');
+const { L } = useOrgLabels();
 const route = useRoute();
 const invoice = ref(null);
 const loading = ref(true);

@@ -4,7 +4,7 @@
       <router-link to="/reports" class="p-2 rounded-lg hover:bg-primary-50 text-primary-400">
         <ArrowRight class="w-5 h-5" />
       </router-link>
-      <PageHeader title="تقرير الدلالين" subtitle="حساب كل دلال" />
+      <PageHeader :title="`تقرير ${L('suppliers', 'الدلالين')}`" :subtitle="`حساب كل ${L('supplier', 'دلال')}`" />
     </div>
 
     <div class="card p-4">
@@ -22,7 +22,7 @@
           <p class="text-xl font-bold tabular-nums">{{ Number(data.summary.total_weight).toFixed(3) }} كجم</p>
         </div>
         <div class="card p-4">
-          <p class="text-xs text-gray-500">عدد الدلالين</p>
+          <p class="text-xs text-gray-500">عدد {{ L('suppliers', 'الدلالين') }}</p>
           <p class="text-xl font-bold tabular-nums">{{ data.summary.suppliers_count }}</p>
         </div>
         <div class="card p-4">
@@ -38,26 +38,29 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, onMounted, computed } from 'vue';
 import { ArrowRight } from 'lucide-vue-next';
 import PageHeader from '../../components/PageHeader.vue';
 import DataTable from '../../components/DataTable.vue';
 import DateRangePicker from '../../components/DateRangePicker.vue';
 import api from '../../api';
+import { useOrgLabels } from '../../composables/useOrgLabels';
+
+const { L } = useOrgLabels();
 
 const data = ref(null);
 const loading = ref(false);
 const filters = reactive({ start: '', end: '' });
 
-const columns = [
-  { key: 'name', label: 'الدلال', sortable: true },
+const columns = computed(() => [
+  { key: 'name', label: L('supplier', 'الدلال'), sortable: true },
   { key: 'purchases_count', label: 'عدد الفواتير', type: 'number', sortable: true },
   { key: 'total_weight', label: 'إجمالي الوزن', type: 'weight', sortable: true },
   { key: 'total_amount', label: 'إجمالي المبلغ', type: 'currency', sortable: true },
   { key: 'by_method.cash', label: 'نقدي', type: 'currency' },
   { key: 'by_method.credit', label: 'آجل', type: 'currency' },
   { key: 'by_method.transfer', label: 'تحويل', type: 'currency' },
-];
+]);
 
 const fmt = (v) => Number(v || 0).toLocaleString('en-US', { minimumFractionDigits: 2 });
 

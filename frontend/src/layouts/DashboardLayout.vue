@@ -130,6 +130,7 @@ import { storeToRefs } from 'pinia';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth.store';
 import { useUiStore } from '../stores/ui.store';
+import { useOrgLabels } from '../composables/useOrgLabels';
 import api from '../api';
 import {
   LayoutDashboard, Wallet, CreditCard, ClipboardList, Fish as FishIcon,
@@ -147,25 +148,8 @@ const ui = useUiStore();
 const { mobileSidebarOpen } = storeToRefs(ui);
 const { toggleMobileSidebar, closeMobileSidebar } = ui;
 
-const orgLabels = ref({});
-const orgName = ref('');
-const branches = ref([]);
+const { labels: orgLabels, orgName, branches, L } = useOrgLabels();
 const currentBranchId = ref(auth.user?.branch_id || null);
-
-const fetchOrgInfo = async () => {
-  try {
-    const { data } = await api.get('/me/org');
-    orgLabels.value = data.labels || {};
-    orgName.value = data.organization?.name || '';
-    if (data.branches) {
-      branches.value = data.branches;
-    }
-  } catch (e) {
-    // ignore — use defaults
-  }
-};
-
-const L = (key, fallback) => orgLabels.value[key] || fallback;
 
 const navItems = computed(() => {
   const items = [
@@ -245,6 +229,4 @@ const showToast = (message, type = 'success') => {
   setTimeout(() => { toast.show = false; }, 3000);
 };
 provide('toast', showToast);
-
-onMounted(fetchOrgInfo);
 </script>

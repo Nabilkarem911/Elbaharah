@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-6">
-    <PageHeader title="التقرير اليومي" subtitle="ملخص شامل: المبيعات، الأسماك، الدلالين — الأمس / اليوم / الشهر">
+    <PageHeader title="التقرير اليومي" :subtitle="`ملخص شامل: المبيعات، ${L('product', 'الأسماك')}, ${L('suppliers', 'الدلالين')} — الأمس / اليوم / الشهر`">
       <template #actions>
         <button @click="printReport" class="btn-outline"><Printer class="w-4 h-4" /> طباعة</button>
         <button @click="load" class="btn-ghost"><RefreshCw class="w-4 h-4" /> تحديث</button>
@@ -65,7 +65,7 @@
       <div class="card overflow-hidden">
         <div class="bg-primary-500 text-white px-5 py-3 flex items-center gap-2">
           <Fish class="w-5 h-5" />
-          <h2 class="font-bold">تفاصيل الأسماك (مشتريات)</h2>
+          <h2 class="font-bold">تفاصيل {{ L('product', 'الأسماك') }} (مشتريات)</h2>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
@@ -113,7 +113,7 @@
           <div class="px-4 py-3 flex items-center justify-between" :class="p.key === 'today' ? 'bg-primary-50' : 'bg-gray-50'">
             <h3 class="font-bold text-gray-700 flex items-center gap-2">
               <Users class="w-4 h-4" />
-              {{ p.label }} — الدلالين
+              {{ p.label }} — {{ L('suppliers', 'الدلالين') }}
             </h3>
             <span class="text-xs text-gray-400">{{ p.date }}</span>
           </div>
@@ -142,6 +142,9 @@ import { ref, computed, onMounted } from 'vue';
 import { Wallet, Fish, Users, Printer, RefreshCw } from 'lucide-vue-next';
 import PageHeader from '../../components/PageHeader.vue';
 import api from '../../api';
+import { useOrgLabels } from '../../composables/useOrgLabels';
+
+const { L } = useOrgLabels();
 
 const report = ref(null);
 const loading = ref(false);

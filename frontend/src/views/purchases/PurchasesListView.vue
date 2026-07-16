@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-6">
-    <PageHeader title="المشتريات" subtitle="فواتير شراء الأسماك من الدلالين">
+    <PageHeader title="المشتريات" :subtitle="`فواتير شراء ${L('product', 'الأسماك')} من ${L('suppliers', 'الدلالين')}`">
       <template #actions>
         <router-link to="/purchases/new" class="btn-gold">
           <Plus class="w-4 h-4" /> فاتورة جديدة
@@ -15,7 +15,7 @@
 
     <DataTable :data="filteredInvoices" :columns="columns" searchable>
       <template #cell-suppliers_count="{ value }">
-        <span class="badge-info">{{ value }} مورد</span>
+        <span class="badge-info">{{ value }} {{ L('supplier', 'مورد') }}</span>
       </template>
       <template #cell-items_count="{ value }">
         <span class="badge-info">{{ value }} قلم</span>
@@ -38,8 +38,10 @@ import { Plus, Eye } from 'lucide-vue-next';
 import PageHeader from '../../components/PageHeader.vue';
 import DataTable from '../../components/DataTable.vue';
 import api from '../../api';
+import { useOrgLabels } from '../../composables/useOrgLabels';
 
 const toast = inject('toast');
+const { L } = useOrgLabels();
 
 const paymentLabels = { cash: 'نقدي', credit: 'آجل', transfer: 'تحويل' };
 

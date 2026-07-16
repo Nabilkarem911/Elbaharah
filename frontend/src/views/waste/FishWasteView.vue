@@ -1,8 +1,8 @@
 <template>
   <div class="space-y-6">
-    <PageHeader title="هدر الأسماك" subtitle="تسجيل الهدر والتالف وحساب الخسائر">
+    <PageHeader :title="L('product_waste', 'هدر الأسماك')" subtitle="تسجيل الهدر والتالف وحساب الخسائر">
       <template #actions>
-        <ExportButton :data="wastes" :columns="exportColumns" filename="هدر_الأسماك" title="هدر الأسماك" />
+        <ExportButton :data="wastes" :columns="exportColumns" filename="هدر" :title="L('product_waste', 'هدر الأسماك')" />
         <button @click="openReasonModal()" class="btn-outline"><Settings class="w-4 h-4" /> إدارة الأسباب</button>
         <button @click="openModal()" class="btn-gold"><Plus class="w-4 h-4" /> تسجيل هدر</button>
       </template>
@@ -38,7 +38,7 @@
     <Modal :show="showModal" :title="editing ? 'تعديل هدر' : 'تسجيل هدر'" @close="closeModal">
       <div class="space-y-4">
         <div>
-          <label class="label">نوع السمك</label>
+          <label class="label">{{ L('product_type', 'نوع السمك') }}</label>
           <select v-model="form.fish_type_id" class="input" @change="onFishChange">
             <option value="">اختر النوع</option>
             <option v-for="f in fishTypes" :key="f.id" :value="f.id">{{ f.name }}</option>
@@ -116,27 +116,29 @@ import Modal from '../../components/Modal.vue';
 import ExportButton from '../../components/ExportButton.vue';
 import DateRangePicker from '../../components/DateRangePicker.vue';
 import api from '../../api';
+import { useOrgLabels } from '../../composables/useOrgLabels';
 
 const toast = inject('toast');
+const { L } = useOrgLabels();
 
-const columns = [
+const columns = computed(() => [
   { key: 'waste_date', label: 'التاريخ', sortable: true },
-  { key: 'fishType', label: 'نوع السمك' },
+  { key: 'fishType', label: L('product_type', 'نوع السمك') },
   { key: 'weight', label: 'الوزن', type: 'weight', sortable: true },
   { key: 'cost_per_kilo', label: 'تكلفة الكيلو', type: 'currency' },
   { key: 'total_cost', label: 'الإجمالي', type: 'currency', sortable: true },
   { key: 'reason', label: 'السبب' },
-];
+]);
 
-const exportColumns = [
+const exportColumns = computed(() => [
   { key: 'waste_date', label: 'التاريخ' },
-  { key: 'fish_type_name', label: 'نوع السمك' },
+  { key: 'fish_type_name', label: L('product_type', 'نوع السمك') },
   { key: 'weight', label: 'الوزن' },
   { key: 'cost_per_kilo', label: 'تكلفة الكيلو' },
   { key: 'total_cost', label: 'الإجمالي' },
   { key: 'reason', label: 'السبب' },
   { key: 'notes', label: 'ملاحظات' },
-];
+]);
 
 const wastes = ref([]);
 const fishTypes = ref([]);

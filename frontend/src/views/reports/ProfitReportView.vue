@@ -34,7 +34,7 @@
           <p class="text-xl font-bold tabular-nums">{{ fmt(data.summary.total_other_sales) }}</p>
         </div>
         <div class="card p-4">
-          <p class="text-xs text-gray-500">هدر الأسماك</p>
+          <p class="text-xs text-gray-500">{{ L('product_waste', 'هدر الأسماك') }}</p>
           <p class="text-xl font-bold text-danger tabular-nums">{{ fmt(data.summary.total_waste) }}</p>
         </div>
         <div class="card p-4">

@@ -127,7 +127,7 @@ const error = ref('');
 
 const features = [
   { icon: Wallet, text: 'حركة مالية يومية بكل قنوات البيع' },
-  { icon: ShoppingCart, text: 'مشتريات الأسماك من الدلالين بالتفصيل' },
+  { icon: ShoppingCart, text: 'مشتريات وموردين بالتفصيل' },
   { icon: BarChart3, text: 'إحصائيات وتقارير شاملة' },
   { icon: FileText, text: 'تصدير احترافي PDF و Excel' },
 ];

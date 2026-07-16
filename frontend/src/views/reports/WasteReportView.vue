@@ -4,7 +4,7 @@
       <router-link to="/reports" class="p-2 rounded-lg hover:bg-primary-50 text-primary-400">
         <ArrowRight class="w-5 h-5" />
       </router-link>
-      <PageHeader title="تقرير هدر الأسماك" subtitle="تحليل الهدر حسب النوع والسبب" />
+      <PageHeader :title="`تقرير ${L('product_waste', 'هدر الأسماك')}`" subtitle="تحليل الهدر حسب النوع والسبب" />
     </div>
 
     <div class="card p-4">
@@ -26,14 +26,14 @@
           <p class="text-xl font-bold text-primary-500">{{ data.summary.count }}</p>
         </div>
         <div class="card p-4">
-          <p class="text-xs text-gray-500">أنواع السمك</p>
+          <p class="text-xs text-gray-500">{{ L('product_type', 'أنواع السمك') }}</p>
           <p class="text-xl font-bold text-primary-500">{{ data.summary.fish_types_count }}</p>
         </div>
       </div>
 
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div>
-          <h3 class="font-bold text-primary-500 mb-3">الهدر حسب نوع السمك</h3>
+          <h3 class="font-bold text-primary-500 mb-3">الهدر حسب {{ L('product_type', 'نوع السمك') }}</h3>
           <DataTable :data="data.byFish" :columns="fishColumns" :per-page="20" />
         </div>
         <div>
@@ -56,23 +56,26 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, onMounted, computed } from 'vue';
 import { ArrowRight } from 'lucide-vue-next';
 import PageHeader from '../../components/PageHeader.vue';
 import DataTable from '../../components/DataTable.vue';
 import DateRangePicker from '../../components/DateRangePicker.vue';
 import api from '../../api';
+import { useOrgLabels } from '../../composables/useOrgLabels';
+
+const { L } = useOrgLabels();
 
 const data = ref(null);
 const loading = ref(false);
 const filters = reactive({ start: '', end: '' });
 
-const fishColumns = [
-  { key: 'name', label: 'نوع السمك', sortable: true },
+const fishColumns = computed(() => [
+  { key: 'name', label: L('product_type', 'نوع السمك'), sortable: true },
   { key: 'total_weight', label: 'الوزن', type: 'weight', sortable: true },
   { key: 'total_cost', label: 'التكلفة', type: 'currency', sortable: true },
   { key: 'count', label: 'العدد', type: 'number' },
-];
+]);
 
 const reasonColumns = [
   { key: 'reason', label: 'السبب', sortable: true },
@@ -81,13 +84,13 @@ const reasonColumns = [
   { key: 'count', label: 'العدد', type: 'number' },
 ];
 
-const detailColumns = [
+const detailColumns = computed(() => [
   { key: 'waste_date', label: 'التاريخ', sortable: true },
-  { key: 'fishType', label: 'نوع السمك' },
+  { key: 'fishType', label: L('product_type', 'نوع السمك') },
   { key: 'weight', label: 'الوزن', type: 'weight', sortable: true },
   { key: 'total_cost', label: 'التكلفة', type: 'currency', sortable: true },
   { key: 'reason', label: 'السبب' },
-];
+]);
 
 const fmt = (v) => Number(v || 0).toLocaleString('en-US', { minimumFractionDigits: 2 });
 

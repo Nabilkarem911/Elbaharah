@@ -4,7 +4,7 @@
     <div class="flex flex-wrap items-center justify-between gap-4">
       <div>
         <h2 class="text-xl font-bold text-primary-500">الجرد ورصيد بداية المدة</h2>
-        <p class="text-sm text-gray-500 mt-1">تسجيل رصيد بداية الشهر وجرد نهاية الشهر للأسماك</p>
+        <p class="text-sm text-gray-500 mt-1">تسجيل رصيد بداية الشهر وجرد نهاية الشهر لـ{{ L('product', 'الأسماك') }}</p>
       </div>
       <div class="flex items-center gap-3">
         <button @click="saveAll" class="btn-gold" :disabled="saving">
@@ -43,7 +43,7 @@
         <table class="w-full text-sm">
           <thead>
             <tr class="bg-gray-50 border-b">
-              <th class="px-4 py-3 text-right font-bold text-gray-600">نوع السمك</th>
+              <th class="px-4 py-3 text-right font-bold text-gray-600">{{ L('product_type', 'نوع السمك') }}</th>
               <th class="px-4 py-3 text-right font-medium text-gray-500" v-if="mode === 'opening'">رصيد بداية (كجم)</th>
               <th class="px-4 py-3 text-right font-medium text-gray-500" v-if="mode === 'opening'">تكلفة بداية المدة</th>
               <th class="px-4 py-3 text-right font-medium text-gray-500" v-if="mode === 'closing'">جرد نهاية الشهر (كجم)</th>
@@ -87,7 +87,7 @@
               </template>
             </tr>
             <tr v-if="!inventoryRows.length">
-              <td :colspan="3" class="py-8 text-center text-gray-400">لا توجد أنواع أسماك</td>
+              <td :colspan="3" class="py-8 text-center text-gray-400">لا توجد أنواع {{ L('product', 'أسماك') }}</td>
             </tr>
           </tbody>
           <tfoot v-if="inventoryRows.length">
@@ -113,8 +113,10 @@
 import { ref, reactive, computed, inject, onMounted } from 'vue';
 import { Save, Loader2, RefreshCw } from 'lucide-vue-next';
 import api from '../../api';
+import { useOrgLabels } from '../../composables/useOrgLabels';
 
 const toast = inject('toast');
+const { L } = useOrgLabels();
 
 const selectedMonth = ref(new Date().toISOString().slice(0, 7));
 const mode = ref('opening');
