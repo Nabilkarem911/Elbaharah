@@ -12,7 +12,7 @@ router.get('/', auth, superAdmin, async (req, res, next) => {
   try {
     const orgs = await Organization.findAll({
       include: [{ model: Branch, as: 'branches' }],
-      order: [['createdAt', 'DESC']],
+      order: [['id', 'DESC']],
     });
     res.json(orgs);
   } catch (err) { next(err); }
