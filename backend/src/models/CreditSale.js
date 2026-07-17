@@ -41,45 +41,48 @@ const CreditSale = sequelize.define('CreditSale', {
 }, {
   tableName: 'credit_sales',
   hooks: {
-    afterCreate: async (sale) => {
+    afterCreate: async (sale, options) => {
       const { CreditAccount } = require('../models');
-      const account = await CreditAccount.findByPk(sale.credit_account_id);
-      if (account) {
-        account.total_balance = parseFloat(account.total_balance) + parseFloat(sale.amount);
-        await account.save();
-      }
+      const t = options.transaction;
+      await CreditAccount.increment('total_balance', {
+        by: parseFloat(sale.amount),
+        where: { id: sale.credit_account_id },
+        transaction: t,
+      });
     },
-    afterUpdate: async (sale) => {
+    afterUpdate: async (sale, options) => {
       if (sale.changed('amount') || sale.changed('credit_account_id')) {
         const { CreditAccount } = require('../models');
+        const t = options.transaction;
         if (sale.previous('credit_account_id') === sale.credit_account_id) {
-          const account = await CreditAccount.findByPk(sale.credit_account_id);
-          if (account) {
-            const diff = parseFloat(sale.amount) - parseFloat(sale.previous('amount'));
-            account.total_balance = parseFloat(account.total_balance) + diff;
-            await account.save();
-          }
+          const diff = parseFloat(sale.amount) - parseFloat(sale.previous('amount'));
+          await CreditAccount.increment('total_balance', {
+            by: diff,
+            where: { id: sale.credit_account_id },
+            transaction: t,
+          });
         } else {
-          const oldAcc = await CreditAccount.findByPk(sale.previous('credit_account_id'));
-          if (oldAcc) {
-            oldAcc.total_balance = parseFloat(oldAcc.total_balance) - parseFloat(sale.previous('amount'));
-            await oldAcc.save();
-          }
-          const newAcc = await CreditAccount.findByPk(sale.credit_account_id);
-          if (newAcc) {
-            newAcc.total_balance = parseFloat(newAcc.total_balance) + parseFloat(sale.amount);
-            await newAcc.save();
-          }
+          await CreditAccount.increment('total_balance', {
+            by: -parseFloat(sale.previous('amount')),
+            where: { id: sale.previous('credit_account_id') },
+            transaction: t,
+          });
+          await CreditAccount.increment('total_balance', {
+            by: parseFloat(sale.amount),
+            where: { id: sale.credit_account_id },
+            transaction: t,
+          });
         }
       }
     },
-    afterDestroy: async (sale) => {
+    afterDestroy: async (sale, options) => {
       const { CreditAccount } = require('../models');
-      const account = await CreditAccount.findByPk(sale.credit_account_id);
-      if (account) {
-        account.total_balance = parseFloat(account.total_balance) - parseFloat(sale.amount);
-        await account.save();
-      }
+      const t = options.transaction;
+      await CreditAccount.increment('total_balance', {
+        by: -parseFloat(sale.amount),
+        where: { id: sale.credit_account_id },
+        transaction: t,
+      });
     },
   },
 });

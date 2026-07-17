@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const { User, Organization, Branch } = require('../models');
+const { JWT_SECRET, JWT_EXPIRES_IN } = require('../config/jwt');
 
 exports.login = async (req, res, next) => {
   try {
@@ -43,8 +44,8 @@ exports.login = async (req, res, next) => {
         organization_id: user.organization_id,
         branch_id: user.branch_id,
       },
-      process.env.JWT_SECRET || 'elbharah_jwt_secret_key_2026',
-      { expiresIn: process.env.JWT_EXPIRES_IN || '24h' }
+      JWT_SECRET,
+      { expiresIn: JWT_EXPIRES_IN }
     );
     res.json({
       token,

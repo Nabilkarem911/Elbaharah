@@ -5,9 +5,11 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const path = require('path');
+const rateLimit = require('express-rate-limit');
 
 const { sequelize, User } = require('./models');
 const errorHandler = require('./middleware/error.middleware');
+const auth = require('./middleware/auth.middleware');
 
 const authRoutes = require('./routes/auth.routes');
 const dashboardRoutes = require('./routes/dashboard.routes');
@@ -40,7 +42,18 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', db: dbReady ? 'connected' : 'connecting', timestamp: new Date().toISOString() });
 });
 
-app.get('/api/routes', (req, res) => {
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: { error: 'محاولات كثيرة — يرجى المحاولة بعد 15 دقيقة' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.get('/api/routes', auth, (req, res) => {
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(403).json({ error: 'غير متاح في production' });
+  }
   const routes = [];
   function walk(stack, prefix) {
     if (!prefix) prefix = '';
@@ -59,7 +72,7 @@ app.get('/api/routes', (req, res) => {
   res.json({ routes });
 });
 
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authRoutes(loginLimiter));
 app.use('/api/super-admin', superAdminRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api', apiRoutes);
@@ -83,9 +96,13 @@ async function connectWithRetry(attempt = 1) {
     console.log(`🔄 DB connection attempt ${attempt}...`);
     await sequelize.authenticate();
     console.log('✅ Database connected');
-    const syncOptions = { alter: true };
-    await sequelize.sync(syncOptions);
-    console.log('✅ Models synced');
+    const syncOptions = process.env.NODE_ENV === 'production' ? {} : { alter: true };
+    if (process.env.NODE_ENV !== 'production') {
+      await sequelize.sync(syncOptions);
+      console.log('✅ Models synced (alter mode)');
+    } else {
+      console.log('✅ Production mode — skipping model sync (use migrations)');
+    }
     dbReady = true;
 
     const superAdmin = await User.findOne({ where: { role: 'super_admin' } });

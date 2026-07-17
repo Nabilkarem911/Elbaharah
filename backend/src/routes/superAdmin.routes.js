@@ -6,6 +6,7 @@ const superAdmin = require('../middleware/superAdmin.middleware');
 const validate = require('../middleware/validate.middleware');
 const { Organization, Branch, User, sequelize } = require('../models');
 const { activityTemplates } = require('../config/activity-templates');
+const { JWT_SECRET } = require('../config/jwt');
 
 // List all organizations
 router.get('/', auth, superAdmin, async (req, res, next) => {
@@ -190,7 +191,7 @@ router.post('/:id/impersonate', auth, superAdmin, async (req, res, next) => {
         branch_id: adminUser.branch_id,
         impersonated_by: req.user.id,
       },
-      process.env.JWT_SECRET || 'elbharah_jwt_secret_key_2026',
+      JWT_SECRET,
       { expiresIn: '2h' }
     );
 

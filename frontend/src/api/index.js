@@ -25,9 +25,9 @@ api.interceptors.response.use(
         localStorage.removeItem('super_admin_token');
         localStorage.removeItem('super_admin_user');
         resetOrgLabels();
-      }
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login';
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
       }
     }
     return Promise.reject(error);

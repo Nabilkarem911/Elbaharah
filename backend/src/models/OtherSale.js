@@ -44,7 +44,9 @@ const OtherSale = sequelize.define('OtherSale', {
   tableName: 'other_sales',
   hooks: {
     beforeSave: (sale) => {
-      sale.total = parseFloat(sale.unit_price) * parseFloat(sale.quantity);
+      const unitPrice = Number(sale.unit_price) || 0;
+      const quantity = Number(sale.quantity) || 0;
+      sale.total = unitPrice * quantity;
     },
   },
 });

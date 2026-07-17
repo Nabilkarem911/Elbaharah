@@ -54,7 +54,9 @@ const FishWaste = sequelize.define('FishWaste', {
   tableName: 'fish_waste',
   hooks: {
     beforeSave: (w) => {
-      w.total_cost = parseFloat(w.weight) * parseFloat(w.cost_per_kilo);
+      const weight = Number(w.weight) || 0;
+      const costPerKilo = Number(w.cost_per_kilo) || 0;
+      w.total_cost = weight * costPerKilo;
     },
   },
 });

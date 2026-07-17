@@ -47,8 +47,9 @@ const PosTransaction = sequelize.define('PosTransaction', {
   tableName: 'pos_transactions',
   hooks: {
     beforeSave: (tx) => {
-      const fee = parseFloat(tx.fee_percentage || 0);
-      tx.amount_after_fee = parseFloat(tx.amount) * (1 - fee / 100);
+      const amount = Number(tx.amount) || 0;
+      const fee = Number(tx.fee_percentage) || 0;
+      tx.amount_after_fee = amount * (1 - fee / 100);
     },
   },
 });
