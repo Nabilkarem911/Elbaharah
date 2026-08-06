@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import api from '../api';
 import { resetOrgLabels } from '../composables/useOrgLabels';
+import { resetPermissions } from '../composables/usePermissions';
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -37,6 +38,7 @@ export const useAuthStore = defineStore('auth', {
       localStorage.removeItem('super_admin_token');
       localStorage.removeItem('super_admin_user');
       resetOrgLabels();
+      resetPermissions();
     },
     async fetchMe() {
       const { data } = await api.get('/auth/me');
@@ -67,6 +69,7 @@ export const useAuthStore = defineStore('auth', {
       localStorage.removeItem('super_admin_token');
       localStorage.removeItem('super_admin_user');
       resetOrgLabels();
+      resetPermissions();
       return true;
     },
   },

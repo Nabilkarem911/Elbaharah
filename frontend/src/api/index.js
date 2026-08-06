@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { resetOrgLabels } from '../composables/useOrgLabels';
+import { resetPermissions } from '../composables/usePermissions';
 
 const api = axios.create({
   baseURL: '/api',
@@ -25,6 +26,7 @@ api.interceptors.response.use(
         localStorage.removeItem('super_admin_token');
         localStorage.removeItem('super_admin_user');
         resetOrgLabels();
+        resetPermissions();
         if (window.location.pathname !== '/login') {
           window.location.href = '/login';
         }

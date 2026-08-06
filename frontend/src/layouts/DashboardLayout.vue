@@ -131,6 +131,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth.store';
 import { useUiStore } from '../stores/ui.store';
 import { useOrgLabels } from '../composables/useOrgLabels';
+import { usePermissions, loadEnabledPages } from '../composables/usePermissions';
 import api from '../api';
 import {
   LayoutDashboard, Wallet, CreditCard, ClipboardList, Fish as FishIcon,
@@ -149,13 +150,14 @@ const { mobileSidebarOpen } = storeToRefs(ui);
 const { toggleMobileSidebar, closeMobileSidebar } = ui;
 
 const { labels: orgLabels, orgName, branches, L } = useOrgLabels();
+const { filterNavItems } = usePermissions();
 const currentBranchId = ref(auth.user?.branch_id || null);
 
 const navItems = computed(() => {
   const items = [
     { path: '/dashboard', label: 'الداشبورد', icon: LayoutDashboard },
     { path: '/daily-report', label: 'التقرير اليومي', icon: ClipboardList },
-    { path: '/financial-movement', label: 'الحركة المالية', icon: Wallet },
+    { path: '/financial-movement', label: 'الإقفال اليومي', icon: Wallet },
     { path: '/pos-machines', label: 'الموازنات', icon: CreditCard },
     { path: '/monthly-summary', label: 'الملخص الشهري', icon: ClipboardList },
     { path: '/fish-cost', label: L('product_cost', 'تكلفة السمك'), icon: FishIcon },
@@ -177,7 +179,7 @@ const navItems = computed(() => {
     items.push({ path: '/users', label: 'المستخدمين', icon: User });
     items.push({ path: '/settings', label: 'الإعدادات', icon: Settings });
   }
-  return items;
+  return filterNavItems(items);
 });
 
 const isActive = (path) => route.path === path || route.path.startsWith(path + '/');
@@ -229,4 +231,8 @@ const showToast = (message, type = 'success') => {
   setTimeout(() => { toast.show = false; }, 3000);
 };
 provide('toast', showToast);
+
+onMounted(() => {
+  loadEnabledPages();
+});
 </script>

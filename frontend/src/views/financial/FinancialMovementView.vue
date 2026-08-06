@@ -3,11 +3,11 @@
     <!-- Header -->
     <div class="flex flex-wrap items-center justify-between gap-4">
       <div>
-        <h2 class="text-xl font-bold text-primary-500">الحركة المالية</h2>
+        <h2 class="text-xl font-bold text-primary-500">الإقفال اليومي</h2>
         <p class="text-sm text-gray-500 mt-1">تسجيل وعرض المبيعات اليومية بكل قنوات البيع</p>
       </div>
       <div class="flex items-center gap-3">
-        <ExportButton :data="sales" :columns="columns" filename="الحركة_المالية" title="الحركة المالية" />
+        <ExportButton :data="sales" :columns="columns" filename="الإقفال_اليومي" title="الإقفال اليومي" />
         <button @click="openModal()" class="btn-gold">
           <Plus class="w-4 h-4" />
           <span>سجل يومي جديد</span>

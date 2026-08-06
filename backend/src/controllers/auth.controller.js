@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const { User, Organization, Branch } = require('../models');
 const { JWT_SECRET, JWT_EXPIRES_IN } = require('../config/jwt');
+const { getEffectivePages } = require('../config/pages');
 
 exports.login = async (req, res, next) => {
   try {
@@ -47,9 +48,16 @@ exports.login = async (req, res, next) => {
       JWT_SECRET,
       { expiresIn: JWT_EXPIRES_IN }
     );
+    const userJson = user.toJSON();
+    if (user.organization) {
+      userJson.enabled_pages = getEffectivePages(
+        user.organization.enabled_pages,
+        user.organization.activity_type
+      );
+    }
     res.json({
       token,
-      user: user.toJSON(),
+      user: userJson,
     });
   } catch (err) {
     next(err);
@@ -65,7 +73,14 @@ exports.me = async (req, res, next) => {
       ],
     });
     if (!user) return res.status(404).json({ error: 'المستخدم غير موجود' });
-    res.json(user);
+    const userJson = user.toJSON();
+    if (user.organization) {
+      userJson.enabled_pages = getEffectivePages(
+        user.organization.enabled_pages,
+        user.organization.activity_type
+      );
+    }
+    res.json(userJson);
   } catch (err) {
     next(err);
   }

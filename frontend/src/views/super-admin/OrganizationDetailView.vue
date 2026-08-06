@@ -183,6 +183,44 @@
           </tbody>
         </table>
       </div>
+      <!-- Enabled Pages -->
+      <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+        <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+          <div>
+            <h3 class="font-semibold text-slate-700">صفحات المنشأة</h3>
+            <p class="text-xs text-slate-400 mt-0.5">تحكم في الصفحات الظاهرة لمنشأة {{ org.name }}</p>
+          </div>
+          <button
+            @click="savePages"
+            :disabled="savingPages"
+            class="flex items-center gap-2 px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors text-sm font-medium disabled:opacity-50"
+          >
+            <Loader2 v-if="savingPages" class="w-4 h-4 animate-spin" />
+            <Save v-else class="w-4 h-4" />
+            <span>حفظ الصفحات</span>
+          </button>
+        </div>
+        <div class="p-5">
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            <label
+              v-for="page in allPages"
+              :key="page.key"
+              class="flex items-center gap-2 px-3 py-2.5 rounded-xl border cursor-pointer transition-all"
+              :class="selectedPages.includes(page.key)
+                ? 'border-indigo-300 bg-indigo-50'
+                : 'border-gray-200 hover:border-gray-300'"
+            >
+              <input
+                type="checkbox"
+                :value="page.key"
+                v-model="selectedPages"
+                class="w-4 h-4 rounded text-indigo-500 focus:ring-indigo-200"
+              />
+              <span class="text-sm font-medium text-slate-700">{{ page.label }}</span>
+            </label>
+          </div>
+        </div>
+      </div>
     </template>
 
     <!-- Branch Modal -->
@@ -240,7 +278,7 @@ import { useRoute } from 'vue-router';
 import api from '../../api';
 import Modal from '../../components/Modal.vue';
 import {
-  Building2, Plus, Trash2, ArrowRight, Loader2, GitBranch, Users, Coins,
+  Building2, Plus, Trash2, ArrowRight, Loader2, GitBranch, Users, Coins, Save,
 } from 'lucide-vue-next';
 
 const route = useRoute();
@@ -257,6 +295,7 @@ const activityLabels = {
   honey_shop: 'محل عسل',
   retail: 'محل تجزئة',
   bakery: 'مخبز',
+  simple: 'قالب مبسط',
   custom: 'مخصص',
 };
 
@@ -276,10 +315,29 @@ const fetchOrg = async () => {
   try {
     const { data } = await api.get(`/super-admin/${route.params.id}`);
     org.value = data;
+    selectedPages.value = data.enabled_pages || [];
+    const { data: pagesData } = await api.get('/super-admin/pages/list');
+    allPages.value = pagesData;
   } catch (err) {
     showToast('فشل تحميل بيانات المنشأة', 'error');
   } finally {
     loading.value = false;
+  }
+};
+
+const allPages = ref([]);
+const selectedPages = ref([]);
+const savingPages = ref(false);
+
+const savePages = async () => {
+  savingPages.value = true;
+  try {
+    await api.put(`/super-admin/${org.value.id}/pages`, { enabled_pages: selectedPages.value });
+    showToast('تم حفظ صفحات المنشأة بنجاح');
+  } catch (err) {
+    showToast(err.response?.data?.error || 'فشل حفظ الصفحات', 'error');
+  } finally {
+    savingPages.value = false;
   }
 };
 

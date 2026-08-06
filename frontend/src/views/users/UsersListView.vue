@@ -17,6 +17,7 @@
         <span :class="value ? 'badge-success' : 'badge-danger'">{{ value ? 'نشط' : 'موقوف' }}</span>
       </template>
       <template #actions="{ row }">
+        <button v-if="row.role !== 'admin'" @click="openPermissionsModal(row)" class="p-1.5 rounded-lg hover:bg-blue-50 text-blue-400" title="الصلاحيات"><ShieldCheck class="w-4 h-4" /></button>
         <button @click="openModal(row)" class="p-1.5 rounded-lg hover:bg-primary-50 text-primary-400"><Pencil class="w-4 h-4" /></button>
         <button @click="confirmDelete(row)" class="p-1.5 rounded-lg hover:bg-red-50 text-red-400"><Trash2 class="w-4 h-4" /></button>
       </template>
@@ -57,12 +58,44 @@
         <button @click="save" class="btn-gold">{{ editing ? 'حفظ' : 'إضافة' }}</button>
       </template>
     </Modal>
+
+    <!-- Permissions Modal -->
+    <Modal :show="showPermissionsModal" :title="`صلاحيات: ${permissionsUser?.full_name || ''}`" size="lg" @close="showPermissionsModal = false">
+      <div v-if="permissionsLoading" class="p-8 text-center text-gray-400">جاري التحميل...</div>
+      <div v-else class="space-y-3">
+        <p class="text-sm text-gray-500 mb-3">حدد الصفحات التي يمكن لهذا المستخدم الوصول إليها. اترك الكل فارغ للسماح بكل صفحات المنشأة.</p>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <label
+            v-for="page in availablePages"
+            :key="page.key"
+            class="flex items-center gap-2 px-3 py-2.5 rounded-xl border cursor-pointer transition-all"
+            :class="selectedPermissions.includes(page.key)
+              ? 'border-primary-300 bg-primary-50'
+              : 'border-gray-200 hover:border-gray-300'"
+          >
+            <input
+              type="checkbox"
+              :value="page.key"
+              v-model="selectedPermissions"
+              class="w-4 h-4 rounded text-primary-500 focus:ring-primary-200"
+            />
+            <span class="text-sm font-medium text-gray-700">{{ page.label }}</span>
+          </label>
+        </div>
+      </div>
+      <template #footer>
+        <button @click="showPermissionsModal = false" class="btn-ghost">إلغاء</button>
+        <button @click="savePermissions" class="btn-gold" :disabled="savingPermissions">
+          {{ savingPermissions ? 'جاري الحفظ...' : 'حفظ الصلاحيات' }}
+        </button>
+      </template>
+    </Modal>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, inject, onMounted } from 'vue';
-import { Plus, Pencil, Trash2 } from 'lucide-vue-next';
+import { Plus, Pencil, Trash2, ShieldCheck } from 'lucide-vue-next';
 import PageHeader from '../../components/PageHeader.vue';
 import DataTable from '../../components/DataTable.vue';
 import Modal from '../../components/Modal.vue';
@@ -126,6 +159,42 @@ const confirmDelete = async (row) => {
   if (!confirm(`حذف المستخدم ${row.username}؟`)) return;
   try { await api.delete(`/users/${row.id}`); toast('تم الحذف'); loadData(); }
   catch { toast('فشل', 'error'); }
+};
+
+const showPermissionsModal = ref(false);
+const permissionsUser = ref(null);
+const availablePages = ref([]);
+const selectedPermissions = ref([]);
+const permissionsLoading = ref(false);
+const savingPermissions = ref(false);
+
+const openPermissionsModal = async (row) => {
+  permissionsUser.value = row;
+  showPermissionsModal.value = true;
+  permissionsLoading.value = true;
+  selectedPermissions.value = row.permissions || [];
+  try {
+    const { data } = await api.get('/pages/available');
+    availablePages.value = data.pages || [];
+  } catch (err) {
+    toast('فشل تحميل الصفحات', 'error');
+  } finally {
+    permissionsLoading.value = false;
+  }
+};
+
+const savePermissions = async () => {
+  savingPermissions.value = true;
+  try {
+    await api.put(`/users/${permissionsUser.value.id}/permissions`, { permissions: selectedPermissions.value });
+    toast('تم حفظ الصلاحيات بنجاح');
+    showPermissionsModal.value = false;
+    loadData();
+  } catch (err) {
+    toast(err.response?.data?.error || 'فشل حفظ الصلاحيات', 'error');
+  } finally {
+    savingPermissions.value = false;
+  }
 };
 
 onMounted(loadData);

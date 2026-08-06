@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import { useAuthStore } from '../stores/auth.store';
+import { usePermissions } from '../composables/usePermissions';
 
 const routes = [
   {
@@ -82,6 +83,12 @@ router.beforeEach((to, from, next) => {
   }
   if (auth.isSuperAdmin && !to.path.startsWith('/super-admin') && !to.path.startsWith('/login') && !auth.isImpersonating) {
     return next('/super-admin');
+  }
+  if (auth.isAuthenticated && !auth.isSuperAdmin && to.meta.auth) {
+    const { canAccessRoute } = usePermissions();
+    if (!canAccessRoute(to.path)) {
+      return next('/dashboard');
+    }
   }
   next();
 });

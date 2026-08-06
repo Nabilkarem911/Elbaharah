@@ -12,7 +12,7 @@ const Organization = sequelize.define('Organization', {
     allowNull: false,
   },
   activity_type: {
-    type: DataTypes.ENUM('fish_restaurant', 'restaurant', 'honey_shop', 'retail', 'bakery', 'custom'),
+    type: DataTypes.ENUM('fish_restaurant', 'restaurant', 'honey_shop', 'retail', 'bakery', 'simple', 'custom'),
     allowNull: false,
     defaultValue: 'custom',
   },
@@ -43,6 +43,10 @@ const Organization = sequelize.define('Organization', {
   labels: {
     type: DataTypes.JSON,
     defaultValue: {},
+  },
+  enabled_pages: {
+    type: DataTypes.JSON,
+    allowNull: true,
   },
 }, {
   tableName: 'organizations',

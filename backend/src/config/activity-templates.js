@@ -199,6 +199,34 @@ const activityTemplates = {
     delivery_platforms: [],
   },
 
+  simple: {
+    labels: {
+      product: 'المنتج',
+      product_type: 'نوع المنتج',
+      product_cost: 'تكلفة المنتجات',
+      product_waste: 'المنتجات التالفة',
+      supplier: 'المورد',
+      suppliers: 'الموردين',
+      inventory: 'جرد المنتجات',
+    },
+    product_types: [],
+    expense_categories: [
+      { code: 1, name: 'رواتب' },
+      { code: 2, name: 'كهرباء' },
+      { code: 3, name: 'إيجار' },
+      { code: 4, name: 'صيانة' },
+      { code: 5, name: 'متفرقات' },
+    ],
+    sale_channels: [
+      { key: 'cash', name: 'كاش', type: 'cash' },
+      { key: 'mada', name: 'مدى', type: 'pos' },
+      { key: 'visa', name: 'فيزا', type: 'pos' },
+      { key: 'mastercard', name: 'ماستركارد', type: 'pos' },
+      { key: 'bank_transfer', name: 'تحويل بنكي', type: 'pos' },
+    ],
+    delivery_platforms: [],
+  },
+
   custom: {
     labels: {
       product: 'المنتج',

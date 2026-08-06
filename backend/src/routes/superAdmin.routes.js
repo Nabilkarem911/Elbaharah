@@ -7,6 +7,7 @@ const validate = require('../middleware/validate.middleware');
 const { Organization, Branch, User, sequelize } = require('../models');
 const { activityTemplates } = require('../config/activity-templates');
 const { JWT_SECRET } = require('../config/jwt');
+const { ALL_PAGES, getDefaultPages, getEffectivePages, PAGE_KEYS } = require('../config/pages');
 
 // List all organizations
 router.get('/', auth, superAdmin, async (req, res, next) => {
@@ -36,7 +37,7 @@ router.get('/:id', auth, superAdmin, async (req, res, next) => {
 // Create organization + main branch + admin user
 router.post('/', auth, superAdmin, [
   body('name').trim().notEmpty().withMessage('اسم المنشأة مطلوب'),
-  body('activity_type').isIn(['fish_restaurant', 'restaurant', 'honey_shop', 'retail', 'bakery', 'custom']).withMessage('نوع النشاط غير صحيح'),
+  body('activity_type').isIn(['fish_restaurant', 'restaurant', 'honey_shop', 'retail', 'bakery', 'simple', 'custom']).withMessage('نوع النشاط غير صحيح'),
   body('admin_username').trim().isLength({ min: 3 }).withMessage('اسم المستخدم 3 أحرف على الأقل'),
   body('admin_password').isLength({ min: 6 }).withMessage('كلمة المرور 6 أحرف على الأقل'),
   body('admin_full_name').trim().notEmpty().withMessage('الاسم الكامل للأدمن مطلوب'),
@@ -54,6 +55,7 @@ router.post('/', auth, superAdmin, [
       phone,
       address,
       labels: template.labels,
+      enabled_pages: getDefaultPages(activity_type),
     }, { transaction: t });
 
     const branch = await Branch.create({
@@ -167,6 +169,24 @@ router.delete('/:orgId/branches/:branchId', auth, superAdmin, async (req, res, n
     if (branch.is_main) return res.status(400).json({ error: 'لا يمكن حذف الفرع الرئيسي' });
     await branch.destroy();
     res.json({ message: 'تم حذف الفرع بنجاح' });
+  } catch (err) { next(err); }
+});
+
+// Get available pages list
+router.get('/pages/list', auth, superAdmin, (req, res) => {
+  res.json(ALL_PAGES);
+});
+
+// Update organization enabled_pages
+router.put('/:id/pages', auth, superAdmin, [
+  body('enabled_pages').isArray().withMessage('الصفحات يجب أن تكون قائمة'),
+], validate, async (req, res, next) => {
+  try {
+    const org = await Organization.findByPk(req.params.id);
+    if (!org) return res.status(404).json({ error: 'المنشأة غير موجودة' });
+    const validPages = req.body.enabled_pages.filter(p => PAGE_KEYS.includes(p));
+    await org.update({ enabled_pages: validPages });
+    res.json({ id: org.id, enabled_pages: validPages });
   } catch (err) { next(err); }
 });
 

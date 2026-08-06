@@ -468,6 +468,41 @@ router.put('/users/:id', auth, role('admin'), [
 });
 router.delete('/users/:id', auth, role('admin'), userCtrl.remove);
 
+// Update user page permissions
+router.put('/users/:id/permissions', auth, role('admin'), [
+  body('permissions').isArray().withMessage('الصلاحيات يجب أن تكون قائمة'),
+], validate, async (req, res, next) => {
+  try {
+    const where = { id: req.params.id };
+    if (req.user.organization_id) where.organization_id = req.user.organization_id;
+    const item = await User.findOne({ where });
+    if (!item) return res.status(404).json({ error: 'مستخدم غير موجود' });
+    if (item.role === 'admin') return res.status(400).json({ error: 'لا يمكن تعديل صلاحيات الأدمن' });
+    await item.update({ permissions: req.body.permissions });
+    res.json({ id: item.id, permissions: item.permissions });
+  } catch (err) { next(err); }
+});
+
+// Get available pages for this organization
+router.get('/pages/available', auth, async (req, res, next) => {
+  try {
+    const { getEffectivePages, ALL_PAGES } = require('../config/pages');
+    let orgPages = null;
+    let activityType = 'custom';
+    if (req.user.organization_id) {
+      const { Organization } = require('../models');
+      const org = await Organization.findByPk(req.user.organization_id);
+      if (org) {
+        orgPages = org.enabled_pages;
+        activityType = org.activity_type;
+      }
+    }
+    const effectivePages = getEffectivePages(orgPages, activityType);
+    const availablePages = ALL_PAGES.filter(p => effectivePages.includes(p.key));
+    res.json({ pages: availablePages, enabled_pages: effectivePages });
+  } catch (err) { next(err); }
+});
+
 // Branches (org admin manages their own branches)
 router.get('/branches', auth, role('admin'), async (req, res, next) => {
   try {

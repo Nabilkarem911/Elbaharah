@@ -55,6 +55,10 @@ const User = sequelize.define('User', {
     type: DataTypes.DATE,
     allowNull: true,
   },
+  permissions: {
+    type: DataTypes.JSON,
+    allowNull: true,
+  },
 }, {
   tableName: 'users',
   hooks: {

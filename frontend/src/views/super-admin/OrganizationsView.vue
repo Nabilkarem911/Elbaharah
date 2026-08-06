@@ -168,6 +168,7 @@
               <option value="honey_shop">محل عسل</option>
               <option value="retail">محل تجزئة</option>
               <option value="bakery">مخبز</option>
+              <option value="simple">قالب مبسط</option>
               <option value="custom">مخصص</option>
             </select>
           </div>
@@ -293,6 +294,7 @@ const activityLabels = {
   honey_shop: 'محل عسل',
   retail: 'محل تجزئة',
   bakery: 'مخبز',
+  simple: 'قالب مبسط',
   custom: 'مخصص',
 };
 
