@@ -21,6 +21,7 @@ const superAdminRoutes = require('./routes/superAdmin.routes');
 const app = express();
 
 app.use(helmet({ crossOriginResourcePolicy: false }));
+app.set('trust proxy', 1);
 const corsOrigin = process.env.CORS_ORIGIN || (process.env.NODE_ENV === 'production' ? null : '*');
 app.use(cors({
   origin: corsOrigin === '*' ? true : (corsOrigin || false),
