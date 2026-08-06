@@ -183,6 +183,37 @@
           </tbody>
         </table>
       </div>
+      <!-- Activity Type & Settings -->
+      <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+        <div class="px-5 py-4 border-b border-gray-100">
+          <h3 class="font-semibold text-slate-700">نوع النشاط</h3>
+          <p class="text-xs text-slate-400 mt-0.5">تغيير نوع النشاط يحدّث المسميات والصفحات الافتراضية</p>
+        </div>
+        <div class="p-5 space-y-4">
+          <div class="flex items-center gap-3 flex-wrap">
+            <select
+              v-model="editActivityType"
+              class="px-3 py-2.5 rounded-xl border border-gray-200 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none text-sm font-medium text-slate-700"
+            >
+              <option v-for="(label, key) in activityLabels" :key="key" :value="key">{{ label }}</option>
+            </select>
+            <button
+              v-if="editActivityType !== org.activity_type"
+              @click="changeActivityType"
+              :disabled="savingActivity"
+              class="flex items-center gap-2 px-3 py-2 bg-amber-50 text-amber-600 rounded-lg hover:bg-amber-100 transition-colors text-sm font-medium disabled:opacity-50"
+            >
+              <Loader2 v-if="savingActivity" class="w-4 h-4 animate-spin" />
+              <Save v-else class="w-4 h-4" />
+              <span>تطبيق التغيير</span>
+            </button>
+            <span v-if="editActivityType !== org.activity_type" class="text-xs text-amber-500">
+              سيتم تحديث المسميات والصفحات الافتراضية
+            </span>
+          </div>
+        </div>
+      </div>
+
       <!-- Enabled Pages -->
       <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
         <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100">
@@ -315,6 +346,7 @@ const fetchOrg = async () => {
   try {
     const { data } = await api.get(`/super-admin/${route.params.id}`);
     org.value = data;
+    editActivityType.value = data.activity_type;
     selectedPages.value = data.enabled_pages || [];
     const { data: pagesData } = await api.get('/super-admin/pages/list');
     allPages.value = pagesData;
@@ -328,6 +360,32 @@ const fetchOrg = async () => {
 const allPages = ref([]);
 const selectedPages = ref([]);
 const savingPages = ref(false);
+const editActivityType = ref('');
+const savingActivity = ref(false);
+
+const changeActivityType = async () => {
+  if (!confirm(`تغيير نوع النشاط إلى "${activityLabels[editActivityType.value]}"؟\nسيتم تحديث المسميات والصفحات الافتراضية.`)) return;
+  savingActivity.value = true;
+  try {
+    const { data } = await api.put(`/super-admin/${org.value.id}`, {
+      name: org.value.name,
+      phone: org.value.phone,
+      address: org.value.address,
+      currency: org.value.currency,
+      tax_rate: org.value.tax_rate,
+      is_active: org.value.is_active,
+      logo_url: org.value.logo_url,
+      activity_type: editActivityType.value,
+    });
+    org.value = { ...org.value, ...data };
+    selectedPages.value = data.enabled_pages || [];
+    showToast('تم تحديث نوع النشاط والمسميات بنجاح');
+  } catch (err) {
+    showToast(err.response?.data?.error || 'فشل تحديث نوع النشاط', 'error');
+  } finally {
+    savingActivity.value = false;
+  }
+};
 
 const savePages = async () => {
   savingPages.value = true;
