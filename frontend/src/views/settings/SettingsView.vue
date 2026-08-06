@@ -118,14 +118,18 @@
     <!-- General Settings -->
     <div v-if="activeTab === 'general'" class="card p-6 space-y-4">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div><label class="label">اسم المنشأة</label><input v-model="settings.restaurant_name" class="input" /></div>
-        <div><label class="label">رقم الهاتف</label><input v-model="settings.phone" class="input" /></div>
-        <div><label class="label">نسبة الضريبة %</label><input type="number" step="0.01" v-model="settings.tax_rate" class="input tabular-nums" /></div>
-        <div><label class="label">العملة</label><input v-model="settings.currency" class="input" /></div>
-        <div class="md:col-span-2"><label class="label">العنوان</label><textarea v-model="settings.address" class="input" rows="2"></textarea></div>
+        <div><label class="label">اسم المنشأة</label><input v-model="orgData.name" class="input" /></div>
+        <div><label class="label">رقم الهاتف</label><input v-model="orgData.phone" class="input" /></div>
+        <div><label class="label">نسبة الضريبة %</label><input type="number" step="0.01" v-model="orgData.tax_rate" class="input tabular-nums" /></div>
+        <div><label class="label">العملة</label><input v-model="orgData.currency" class="input" /></div>
+        <div class="md:col-span-2"><label class="label">العنوان</label><textarea v-model="orgData.address" class="input" rows="2"></textarea></div>
+        <div class="md:col-span-2"><label class="label">رابط الشعار</label><input v-model="orgData.logo_url" class="input" placeholder="https://..." /></div>
       </div>
       <div class="flex justify-end">
-        <button @click="saveSettings" class="btn-gold">حفظ الإعدادات</button>
+        <button @click="saveOrgData" :disabled="savingOrg" class="btn-gold">
+          <Loader2 v-if="savingOrg" class="w-4 h-4 animate-spin" />
+          حفظ بيانات المنشأة
+        </button>
       </div>
     </div>
   </div>
@@ -158,6 +162,8 @@ const deliveryPlatforms = ref([]);
 const expenseCategories = ref([]);
 const saleChannels = ref([]);
 const settings = reactive({ restaurant_name: '', phone: '', tax_rate: 15, currency: 'SAR', address: '' });
+const orgData = reactive({ name: '', phone: '', address: '', currency: 'SAR', tax_rate: 15, logo_url: '' });
+const savingOrg = ref(false);
 
 const fishForm = reactive({ code: '', name: '', name_en: '' });
 const editingFish = ref(false);
@@ -202,13 +208,14 @@ const chColumns = [
 
 const loadAll = async () => {
   try {
-    const [f, p, d, e, c, s] = await Promise.all([
+    const [f, p, d, e, c, s, org] = await Promise.all([
       api.get('/fish-types', { params: { limit: 500 } }),
       api.get('/pos/machines', { params: { limit: 100 } }),
       api.get('/delivery-platforms', { params: { limit: 100 } }),
       api.get('/expense-categories', { params: { limit: 100 } }),
       api.get('/sale-channels', { params: { limit: 100 } }),
       api.get('/settings', { params: { limit: 1 } }),
+      api.get('/me/org'),
     ]);
     fishTypes.value = f.data.data || f.data;
     posMachines.value = p.data.data || p.data;
@@ -217,6 +224,16 @@ const loadAll = async () => {
     saleChannels.value = c.data.data || c.data;
     const sData = Array.isArray(s.data) ? s.data[0] : s.data;
     if (sData) Object.assign(settings, sData);
+    if (org.data.organization) {
+      Object.assign(orgData, {
+        name: org.data.organization.name || '',
+        phone: org.data.organization.phone || '',
+        address: org.data.organization.address || '',
+        currency: org.data.organization.currency || 'SAR',
+        tax_rate: org.data.organization.tax_rate || 15,
+        logo_url: org.data.organization.logo_url || '',
+      });
+    }
   } catch (err) {
     toast('فشل تحميل الإعدادات', 'error');
   }
@@ -298,6 +315,18 @@ const saveChannel = async () => {
 const saveSettings = async () => {
   try { await api.put('/settings', settings); toast('تم حفظ الإعدادات'); }
   catch { toast('فشل', 'error'); }
+};
+
+const saveOrgData = async () => {
+  savingOrg.value = true;
+  try {
+    await api.put('/me/org', orgData);
+    toast('تم حفظ بيانات المنشأة بنجاح');
+  } catch (err) {
+    toast(err.response?.data?.error || 'فشل حفظ البيانات', 'error');
+  } finally {
+    savingOrg.value = false;
+  }
 };
 
 const toggleActive = async (row, endpoint) => {

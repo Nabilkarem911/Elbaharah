@@ -739,4 +739,16 @@ router.delete('/purchase-custody/:id', auth, role('admin', 'manager'), async (re
   } catch (err) { next(err); }
 });
 
+// Update current user's organization (admin only)
+router.put('/me/org', auth, role('admin'), async (req, res, next) => {
+  try {
+    if (!req.user.organization_id) return res.status(400).json({ error: 'لا توجد منشأة مرتبطة' });
+    const org = await Organization.findByPk(req.user.organization_id);
+    if (!org) return res.status(404).json({ error: 'المنشأة غير موجودة' });
+    const { name, phone, address, currency, tax_rate, logo_url } = req.body;
+    await org.update({ name, phone, address, currency, tax_rate, logo_url });
+    res.json(org);
+  } catch (err) { next(err); }
+});
+
 module.exports = router;
