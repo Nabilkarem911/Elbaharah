@@ -37,6 +37,18 @@ async function runMigrations() {
   } else {
     console.log('✅ users.permissions already exists');
   }
+
+  // Add 'simple' to activity_type enum if missing
+  const [enumValues] = await sequelize.query(
+    `SELECT unnest(enum_range(NULL::enum_organizations_activity_type))::text AS val`
+  );
+  const hasSimple = enumValues.some(v => v.val === 'simple');
+  if (!hasSimple) {
+    await sequelize.query(`ALTER TYPE "enum_organizations_activity_type" ADD VALUE IF NOT EXISTS 'simple'`);
+    console.log('✅ Added simple to activity_type enum');
+  } else {
+    console.log('✅ activity_type enum already has simple');
+  }
 }
 
 module.exports = { runMigrations };
