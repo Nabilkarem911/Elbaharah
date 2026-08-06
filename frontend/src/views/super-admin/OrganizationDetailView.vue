@@ -183,6 +183,61 @@
           </tbody>
         </table>
       </div>
+      <!-- Edit Org Data -->
+      <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+        <div class="px-5 py-4 border-b border-gray-100">
+          <h3 class="font-semibold text-slate-700">بيانات المنشأة</h3>
+          <p class="text-xs text-slate-400 mt-0.5">تعديل الاسم، الهاتف، العنوان، العملة، الاشتراك</p>
+        </div>
+        <div class="p-5 space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-slate-600 mb-1">اسم المنشأة *</label>
+              <input v-model="editOrg.name" type="text" class="w-full px-3 py-2.5 rounded-xl border border-gray-200 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none text-sm" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-600 mb-1">رقم الهاتف</label>
+              <input v-model="editOrg.phone" type="text" class="w-full px-3 py-2.5 rounded-xl border border-gray-200 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none text-sm" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-600 mb-1">العملة</label>
+              <input v-model="editOrg.currency" type="text" class="w-full px-3 py-2.5 rounded-xl border border-gray-200 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none text-sm" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-600 mb-1">نسبة الضريبة %</label>
+              <input v-model="editOrg.tax_rate" type="number" step="0.01" class="w-full px-3 py-2.5 rounded-xl border border-gray-200 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none text-sm" />
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-slate-600 mb-1">العنوان</label>
+              <textarea v-model="editOrg.address" rows="2" class="w-full px-3 py-2.5 rounded-xl border border-gray-200 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none text-sm"></textarea>
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-slate-600 mb-1">رابط الشعار</label>
+              <input v-model="editOrg.logo_url" type="text" class="w-full px-3 py-2.5 rounded-xl border border-gray-200 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none text-sm" placeholder="https://..." />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-600 mb-1">تاريخ بداية الاشتراك</label>
+              <input v-model="editOrg.subscription_start" type="date" class="w-full px-3 py-2.5 rounded-xl border border-gray-200 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none text-sm" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-600 mb-1">تاريخ نهاية الاشتراك</label>
+              <input v-model="editOrg.subscription_end" type="date" class="w-full px-3 py-2.5 rounded-xl border border-gray-200 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none text-sm" />
+            </div>
+          </div>
+          <div class="flex justify-end">
+            <button
+              @click="saveOrgData"
+              :disabled="savingOrgData"
+              class="flex items-center gap-2 px-4 py-2 bg-indigo-500 text-white rounded-xl hover:bg-indigo-600 transition-colors text-sm font-medium disabled:opacity-50"
+            >
+              <Loader2 v-if="savingOrgData" class="w-4 h-4 animate-spin" />
+              <Save v-else class="w-4 h-4" />
+              <span>حفظ البيانات</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- Activity Type & Settings -->
       <div class="bg-white rounded-2xl border border-gray-100 overflow-hidden">
         <div class="px-5 py-4 border-b border-gray-100">
@@ -348,6 +403,16 @@ const fetchOrg = async () => {
     org.value = data;
     editActivityType.value = data.activity_type;
     selectedPages.value = data.enabled_pages || [];
+    Object.assign(editOrg, {
+      name: data.name || '',
+      phone: data.phone || '',
+      address: data.address || '',
+      currency: data.currency || 'SAR',
+      tax_rate: data.tax_rate || 15,
+      logo_url: data.logo_url || '',
+      subscription_start: data.subscription_start ? data.subscription_start.split('T')[0] : '',
+      subscription_end: data.subscription_end ? data.subscription_end.split('T')[0] : '',
+    });
     const { data: pagesData } = await api.get('/super-admin/pages/list');
     allPages.value = pagesData;
   } catch (err) {
@@ -362,6 +427,32 @@ const selectedPages = ref([]);
 const savingPages = ref(false);
 const editActivityType = ref('');
 const savingActivity = ref(false);
+const editOrg = reactive({ name: '', phone: '', address: '', currency: 'SAR', tax_rate: 15, logo_url: '', subscription_start: '', subscription_end: '' });
+const savingOrgData = ref(false);
+
+const saveOrgData = async () => {
+  if (!editOrg.name) { showToast('اسم المنشأة مطلوب', 'error'); return; }
+  savingOrgData.value = true;
+  try {
+    const { data } = await api.put(`/super-admin/${org.value.id}`, {
+      name: editOrg.name,
+      phone: editOrg.phone,
+      address: editOrg.address,
+      currency: editOrg.currency,
+      tax_rate: editOrg.tax_rate,
+      is_active: org.value.is_active,
+      logo_url: editOrg.logo_url,
+      subscription_start: editOrg.subscription_start || null,
+      subscription_end: editOrg.subscription_end || null,
+    });
+    org.value = { ...org.value, ...data };
+    showToast('تم حفظ بيانات المنشأة بنجاح');
+  } catch (err) {
+    showToast(err.response?.data?.error || 'فشل حفظ البيانات', 'error');
+  } finally {
+    savingOrgData.value = false;
+  }
+};
 
 const changeActivityType = async () => {
   if (!confirm(`تغيير نوع النشاط إلى "${activityLabels[editActivityType.value]}"؟\nسيتم تحديث المسميات والصفحات الافتراضية.`)) return;

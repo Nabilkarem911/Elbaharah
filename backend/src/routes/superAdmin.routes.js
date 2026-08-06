@@ -93,8 +93,10 @@ router.put('/:id', auth, superAdmin, [
   try {
     const org = await Organization.findByPk(req.params.id);
     if (!org) return res.status(404).json({ error: 'المنشأة غير موجودة' });
-    const { name, phone, address, currency, tax_rate, is_active, logo_url, activity_type } = req.body;
+    const { name, phone, address, currency, tax_rate, is_active, logo_url, activity_type, subscription_start, subscription_end } = req.body;
     const updateData = { name, phone, address, currency, tax_rate, is_active, logo_url };
+    if (subscription_start !== undefined) updateData.subscription_start = subscription_start || null;
+    if (subscription_end !== undefined) updateData.subscription_end = subscription_end || null;
     if (activity_type && activity_type !== org.activity_type) {
       const template = activityTemplates[activity_type] || activityTemplates.custom;
       updateData.activity_type = activity_type;

@@ -48,6 +48,14 @@ const Organization = sequelize.define('Organization', {
     type: DataTypes.JSON,
     allowNull: true,
   },
+  subscription_start: {
+    type: DataTypes.DATEONLY,
+    allowNull: true,
+  },
+  subscription_end: {
+    type: DataTypes.DATEONLY,
+    allowNull: true,
+  },
 }, {
   tableName: 'organizations',
 });
