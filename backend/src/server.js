@@ -8,6 +8,7 @@ const path = require('path');
 const rateLimit = require('express-rate-limit');
 
 const { sequelize, User } = require('./models');
+const { runMigrations } = require('./config/runMigrations');
 const errorHandler = require('./middleware/error.middleware');
 const auth = require('./middleware/auth.middleware');
 
@@ -96,6 +97,9 @@ async function connectWithRetry(attempt = 1) {
     console.log(`🔄 DB connection attempt ${attempt}...`);
     await sequelize.authenticate();
     console.log('✅ Database connected');
+
+    await runMigrations();
+
     const syncOptions = process.env.NODE_ENV === 'production' ? {} : { alter: true };
     if (process.env.NODE_ENV !== 'production') {
       await sequelize.sync(syncOptions);
